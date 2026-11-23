@@ -53,7 +53,7 @@ function Stage({ track, slot, className }: { track: Track; slot: number; classNa
         aria-hidden="true"
         className="absolute inset-[8%] h-[84%] w-[84%] scale-110 rounded-full object-cover opacity-55 blur-3xl"
       />
-      <div className="relative size-full overflow-hidden rounded-[20px] ring-1 ring-line-strong shadow-[0_24px_60px_rgb(4_3_18/0.55)]">
+      <div className="relative size-full overflow-hidden rounded-[20px] ring-1 ring-line-strong shadow-[0_24px_60px_rgb(0_0_0/0.55)]">
         <Artwork
           src={track.art}
           fallback={track.thumb}

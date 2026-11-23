@@ -6,12 +6,12 @@
 
 type Rgb = [number, number, number];
 
-const DARK_SURFACE: Rgb = [0x18, 0x17, 0x38]; // --surface-2, midnight navy glass theme
-const LIGHT_SURFACE: Rgb = [0xf2, 0xf3, 0xfa]; // --surface-2, light theme
+const DARK_SURFACE: Rgb = [0x20, 0x20, 0x25]; // --surface-2, dark monochrome glass theme
+const LIGHT_SURFACE: Rgb = [0xf6, 0xf6, 0xf8]; // --surface-2, light monochrome glass theme
 const WHITE: Rgb = [255, 255, 255];
 const BLACK: Rgb = [0, 0, 0];
 
-export const DEFAULT_ACCENT = "#ff1e6c";
+export const DEFAULT_ACCENT = "#f4f4f6";
 
 export const isHex = (v: unknown): v is string => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v);
 

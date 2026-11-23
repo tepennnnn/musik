@@ -5,25 +5,25 @@ import { Artwork } from "./Artwork";
 
 export type CoverKind = "playlist" | "favorites" | "history" | "offline";
 
-/** Playlist cover: a 2x2 mosaic from the first distinct covers, or a single cover / concept gradient tile. */
+/** Playlist cover: a 2x2 mosaic from the first distinct covers, or a single cover / monochrome glass tile. */
 export function Cover({ kind, tracks, className, iconSize = 40 }: { kind: CoverKind; tracks: Track[]; className?: string; iconSize?: number }) {
   if (kind === "favorites") {
     return (
-      <span className={cn("concept-grad-pink grid place-items-center text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3)]", className)}>
+      <span className={cn("mono-grad-platinum grid place-items-center text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.35)]", className)}>
         <HeartIcon size={iconSize} weight="fill" />
       </span>
     );
   }
   if (kind === "offline") {
     return (
-      <span className={cn("concept-grad-cyan grid place-items-center text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3)]", className)}>
+      <span className={cn("mono-grad-slate grid place-items-center text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.28)]", className)}>
         <CloudArrowDownIcon size={iconSize} weight="fill" />
       </span>
     );
   }
   if (kind === "history") {
     return (
-      <span className={cn("concept-grad-violet grid place-items-center text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3)]", className)}>
+      <span className={cn("mono-grad-obsidian grid place-items-center text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.22)]", className)}>
         <ClockCounterClockwiseIcon size={iconSize} />
       </span>
     );

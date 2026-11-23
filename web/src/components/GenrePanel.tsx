@@ -65,8 +65,8 @@ export function GenrePanel({ id }: { id: string }) {
 
   return (
     <div id={id} className="glass-card flex flex-col gap-4 rounded-[18px] p-3.5">
-      <CategoryChips title={t.search.exploreMoods} state={moods} dotClass="concept-grad-pink" />
-      <CategoryChips title={t.search.exploreGenres} state={genres} dotClass="concept-grad-cyan" />
+      <CategoryChips title={t.search.exploreMoods} state={moods} dotClass="bg-fg shadow-[0_0_6px_rgb(255_255_255/0.45)]" />
+      <CategoryChips title={t.search.exploreGenres} state={genres} dotClass="bg-fg-2" />
     </div>
   );
 }

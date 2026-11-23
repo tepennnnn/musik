@@ -13,16 +13,16 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
-/** Two-tone Musik wordmark inspired by MusicLogo in the design concept. */
+/** Two-tone Musik wordmark in monochrome white, gray, and black. */
 export function Logo({ className }: { className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <span className="concept-grad-pink grid size-7 place-items-center rounded-[9px] text-white shadow-[0_6px_18px_rgb(255_30_108/0.38)]">
+      <span className="grid size-7 place-items-center rounded-[9px] bg-accent text-accent-ink shadow-[0_6px_18px_rgb(0_0_0/0.28)] ring-1 ring-line-strong">
         <LogoMark className="size-4.5" />
       </span>
       <span className="text-[19px] font-bold tracking-tight">
-        <span className="text-accent-text">Mus</span>
-        <span className="text-fg">ik</span>
+        <span className="text-fg">Mus</span>
+        <span className="text-fg-2">ik</span>
       </span>
     </span>
   );

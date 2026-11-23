@@ -28,7 +28,7 @@ export function AccentPicker() {
               aria-label={t.customize.colors[id]}
               title={t.customize.colors[id]}
               onClick={() => set({ accent: color })}
-              className={cn(swatch, on && "ring-2 ring-fg")}
+              className={cn(swatch, on ? "ring-2 ring-fg" : "ring-1 ring-line-strong")}
               style={{ background: color }}
             >
               {on && <CheckIcon size={15} weight="bold" style={{ color: inkFor(color) }} />}

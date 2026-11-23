@@ -58,7 +58,7 @@ export default function Album() {
               src={album.art}
               fallback={album.thumb}
               iconSize={64}
-              className="size-44 shrink-0 rounded-[20px] ring-1 ring-line-strong shadow-[0_24px_60px_rgb(4_3_18/0.5)] md:size-52"
+              className="size-44 shrink-0 rounded-[20px] ring-1 ring-line-strong shadow-[0_24px_60px_rgb(0_0_0/0.5)] md:size-52"
             />
           ) : (
             <span className="skeleton size-44 shrink-0 rounded-[20px] md:size-52" />

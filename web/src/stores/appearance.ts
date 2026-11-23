@@ -24,15 +24,15 @@ export const DEFAULT_APPEARANCE: Appearance = {
   homeFavorites: true,
 };
 
-/** Ready-made accents. "rose" matches the Musik glass concept. */
+/** Ready-made accents. Monochrome ("mono") is the default gray/white/black glass theme. */
 export const ACCENTS = [
-  { id: "rose", color: DEFAULT_ACCENT },
-  { id: "violet", color: "#7c3aed" },
-  { id: "aqua", color: "#00b7ff" },
-  { id: "volt", color: "#c3ec52" },
+  { id: "mono", color: DEFAULT_ACCENT },
+  { id: "silver", color: "#a1a1aa" },
+  { id: "slate", color: "#64748b" },
+  { id: "aqua", color: "#22d3ee" },
+  { id: "sky", color: "#60a5fa" },
   { id: "mint", color: "#34d399" },
-  { id: "pink", color: "#f472b6" },
-  { id: "coral", color: "#fb7c5c" },
+  { id: "volt", color: "#c3ec52" },
   { id: "amber", color: "#fbbf24" },
 ] as const;
 
@@ -44,7 +44,11 @@ const CSS_KEY = "musike:accent-css";
 export function cleanAppearance(input: unknown): Appearance {
   const v = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
   const out: Appearance = { ...DEFAULT_APPEARANCE };
-  if (isHex(v.accent)) out.accent = v.accent.toLowerCase();
+  if (isHex(v.accent)) {
+    const hex = v.accent.toLowerCase();
+    // Migrate away from the old pink/rose default if previously stored.
+    out.accent = hex === "#ff1e6c" || hex === "#f472b6" ? DEFAULT_ACCENT : hex;
+  }
   for (const k of Object.keys(DEFAULT_APPEARANCE) as (keyof Appearance)[]) {
     if (k !== "accent" && typeof v[k] === "boolean") (out[k] as boolean) = v[k];
   }

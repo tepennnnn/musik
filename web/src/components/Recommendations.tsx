@@ -29,7 +29,7 @@ export function StyleChip({ item }: { item: MoodOrGenre }) {
       <span
         className={cn(
           "size-2 rounded-full",
-          isMood ? "concept-grad-pink shadow-[0_0_8px_rgb(255_30_108/0.7)]" : "concept-grad-cyan shadow-[0_0_8px_rgb(0_183_255/0.7)]",
+          isMood ? "bg-fg shadow-[0_0_8px_rgb(255_255_255/0.5)]" : "bg-fg-2",
         )}
       />
       <span>{item.name}</span>

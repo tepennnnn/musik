@@ -64,8 +64,8 @@ export default defineConfig(({ mode }) => {
               short_name: "Musik",
               description: "Your music, uninterrupted — online and offline.",
               lang: "en",
-              theme_color: "#0b0a1a",
-              background_color: "#0b0a1a",
+              theme_color: "#08080a",
+              background_color: "#08080a",
               display: "standalone",
               start_url: "/",
               icons: [

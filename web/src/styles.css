@@ -10,55 +10,55 @@
   }
 }
 
-/* Theme tokens: Midnight Navy + Glassmorphism inspired by the Musik design concept. */
+/* Theme tokens: Monochrome Gray, White & Black with Glassmorphism. */
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0b0a1a;
-  --surface-1: rgb(20 19 46 / 0.56);
-  --surface-2: rgb(29 28 62 / 0.54);
-  --surface-3: rgb(42 40 84 / 0.58);
-  --surface-4: rgb(58 56 112 / 0.66);
-  --surface-solid: #161534;
-  --glass-outer: rgb(18 17 42 / 0.58);
-  --glass-inner: rgb(28 27 60 / 0.44);
-  --glass-menu: rgb(22 21 48 / 0.84);
+  --bg: #08080a;
+  --surface-1: rgb(22 22 25 / 0.58);
+  --surface-2: rgb(34 34 39 / 0.54);
+  --surface-3: rgb(50 50 58 / 0.62);
+  --surface-4: rgb(72 72 82 / 0.74);
+  --surface-solid: #141417;
+  --glass-outer: rgb(18 18 21 / 0.64);
+  --glass-inner: rgb(28 28 33 / 0.48);
+  --glass-menu: rgb(20 20 24 / 0.88);
   --line: rgb(255 255 255 / 0.1);
-  --line-strong: rgb(255 255 255 / 0.18);
-  --fg: #f4f5ff;
-  --fg-2: #b4b7d6;
-  --fg-3: #7d82aa;
-  --accent: #ff1e6c;
-  --accent-ink: #ffffff;
-  --accent-text: #ff4d8d;
-  --accent-soft: rgb(255 30 108 / 0.18);
-  --highlight: rgb(255 255 255 / 0.14);
-  --scrim: rgb(6 5 18 / 0.72);
+  --line-strong: rgb(255 255 255 / 0.22);
+  --fg: #f7f7f8;
+  --fg-2: #a6a7b0;
+  --fg-3: #6e707a;
+  --accent: #f4f4f6;
+  --accent-ink: #08080a;
+  --accent-text: #ffffff;
+  --accent-soft: rgb(255 255 255 / 0.13);
+  --highlight: rgb(255 255 255 / 0.18);
+  --scrim: rgb(0 0 0 / 0.74);
   --danger: #ff7a6b;
 }
 
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #eef0fb;
-  --surface-1: rgb(255 255 255 / 0.68);
-  --surface-2: rgb(255 255 255 / 0.54);
-  --surface-3: rgb(232 234 252 / 0.72);
-  --surface-4: rgb(216 220 246 / 0.82);
+  --bg: #ececef;
+  --surface-1: rgb(255 255 255 / 0.72);
+  --surface-2: rgb(255 255 255 / 0.56);
+  --surface-3: rgb(228 228 232 / 0.76);
+  --surface-4: rgb(208 209 216 / 0.86);
   --surface-solid: #ffffff;
-  --glass-outer: rgb(255 255 255 / 0.66);
-  --glass-inner: rgb(246 247 255 / 0.58);
-  --glass-menu: rgb(255 255 255 / 0.88);
-  --line: rgb(18 17 48 / 0.09);
-  --line-strong: rgb(18 17 48 / 0.16);
-  --fg: #12112a;
-  --fg-2: #4f5278;
-  --fg-3: #7c80a8;
-  --accent: #ff1e6c;
+  --glass-outer: rgb(255 255 255 / 0.74);
+  --glass-inner: rgb(246 246 248 / 0.62);
+  --glass-menu: rgb(255 255 255 / 0.9);
+  --line: rgb(0 0 0 / 0.08);
+  --line-strong: rgb(0 0 0 / 0.16);
+  --fg: #0b0b0d;
+  --fg-2: #52535b;
+  --fg-3: #7a7b85;
+  --accent: #141418;
   --accent-ink: #ffffff;
-  --accent-text: #d6004c;
-  --accent-soft: rgb(255 30 108 / 0.12);
-  --highlight: rgb(255 255 255 / 0.85);
-  --scrim: rgb(14 12 36 / 0.42);
+  --accent-text: #141418;
+  --accent-soft: rgb(15 15 18 / 0.1);
+  --highlight: rgb(255 255 255 / 0.88);
+  --scrim: rgb(0 0 0 / 0.42);
   --danger: #c4372a;
 }
 
@@ -117,7 +117,7 @@
 }
 
 @layer components {
-  /* Ambient mesh behind frosted glass panels: magenta, electric violet, and cyan orbs from the design concept. */
+  /* Monochrome ambient luminance mesh behind frosted glass panels. */
   .ambient-canvas {
     position: fixed;
     inset: 0;
@@ -125,29 +125,29 @@
     pointer-events: none;
     overflow: hidden;
     background:
-      radial-gradient(65% 55% at 12% 10%, rgb(255 0 106 / 0.22) 0%, transparent 65%),
-      radial-gradient(58% 58% at 88% 18%, rgb(106 0 255 / 0.26) 0%, transparent 65%),
-      radial-gradient(55% 50% at 78% 88%, rgb(0 183 255 / 0.18) 0%, transparent 62%),
-      radial-gradient(50% 45% at 18% 85%, rgb(106 0 255 / 0.16) 0%, transparent 60%);
+      radial-gradient(62% 55% at 14% 10%, rgb(255 255 255 / 0.13) 0%, transparent 65%),
+      radial-gradient(56% 56% at 88% 18%, rgb(190 192 200 / 0.1) 0%, transparent 65%),
+      radial-gradient(55% 50% at 78% 88%, rgb(230 232 238 / 0.09) 0%, transparent 62%),
+      radial-gradient(50% 45% at 18% 85%, rgb(140 142 150 / 0.09) 0%, transparent 60%);
   }
   [data-theme="light"] .ambient-canvas {
     background:
-      radial-gradient(65% 55% at 12% 10%, rgb(255 30 108 / 0.16) 0%, transparent 65%),
-      radial-gradient(58% 58% at 88% 18%, rgb(106 0 255 / 0.14) 0%, transparent 65%),
-      radial-gradient(55% 50% at 78% 88%, rgb(0 183 255 / 0.14) 0%, transparent 62%),
-      radial-gradient(50% 45% at 18% 85%, rgb(106 0 255 / 0.1) 0%, transparent 60%);
+      radial-gradient(62% 55% at 14% 10%, rgb(255 255 255 / 0.95) 0%, transparent 65%),
+      radial-gradient(56% 56% at 88% 18%, rgb(145 147 155 / 0.22) 0%, transparent 65%),
+      radial-gradient(55% 50% at 78% 88%, rgb(115 117 125 / 0.18) 0%, transparent 62%),
+      radial-gradient(50% 45% at 18% 85%, rgb(175 177 185 / 0.22) 0%, transparent 60%);
   }
 
   /* Frosted glass island with nested inner shell. */
   .island {
     background: var(--glass-outer);
-    backdrop-filter: blur(26px) saturate(170%);
-    -webkit-backdrop-filter: blur(26px) saturate(170%);
+    backdrop-filter: blur(26px) saturate(120%);
+    -webkit-backdrop-filter: blur(26px) saturate(120%);
     border: 1px solid var(--line-strong);
     border-radius: var(--radius-panel);
     padding: 5px;
     box-shadow:
-      0 18px 46px rgb(4 3 18 / 0.42),
+      0 18px 46px rgb(0 0 0 / 0.45),
       inset 0 1px 0 var(--highlight);
   }
   .island-core {
@@ -158,21 +158,21 @@
 
   .glass-panel {
     background: var(--glass-outer);
-    backdrop-filter: blur(24px) saturate(165%);
-    -webkit-backdrop-filter: blur(24px) saturate(165%);
+    backdrop-filter: blur(24px) saturate(120%);
+    -webkit-backdrop-filter: blur(24px) saturate(120%);
     border: 1px solid var(--line-strong);
     box-shadow:
-      0 16px 40px rgb(4 3 18 / 0.36),
+      0 16px 40px rgb(0 0 0 / 0.38),
       inset 0 1px 0 var(--highlight);
   }
 
   .glass-card {
     background: var(--surface-2);
-    backdrop-filter: blur(18px) saturate(155%);
-    -webkit-backdrop-filter: blur(18px) saturate(155%);
+    backdrop-filter: blur(18px) saturate(120%);
+    -webkit-backdrop-filter: blur(18px) saturate(120%);
     border: 1px solid var(--line);
     box-shadow:
-      0 8px 24px rgb(4 3 18 / 0.24),
+      0 8px 24px rgb(0 0 0 / 0.26),
       inset 0 1px 0 rgb(255 255 255 / 0.1);
     transition:
       background-color 200ms var(--ease-out-expo),
@@ -186,26 +186,26 @@
 
   .glass-menu {
     background: var(--glass-menu);
-    backdrop-filter: blur(28px) saturate(180%);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(125%);
+    -webkit-backdrop-filter: blur(28px) saturate(125%);
     border: 1px solid var(--line-strong);
     box-shadow:
-      0 20px 52px rgb(4 3 18 / 0.55),
+      0 20px 52px rgb(0 0 0 / 0.55),
       inset 0 1px 0 var(--highlight);
   }
 
-  /* Concept gradients matching 3804655.jpg */
-  .concept-grad-pink {
-    background: linear-gradient(135deg, #ff006a 0%, #c1005e 100%);
+  /* Monochrome gray, white, and black glass gradients */
+  .mono-grad-platinum {
+    background: linear-gradient(135deg, #7e808a 0%, #2f3036 100%);
   }
-  .concept-grad-violet {
-    background: linear-gradient(135deg, #7400ff 0%, #3d0099 100%);
+  .mono-grad-slate {
+    background: linear-gradient(135deg, #565861 0%, #1c1d22 100%);
   }
-  .concept-grad-cyan {
-    background: linear-gradient(135deg, #00c2ff 0%, #0066cc 100%);
+  .mono-grad-obsidian {
+    background: linear-gradient(135deg, #2e2f35 0%, #0b0b0e 100%);
   }
-  .concept-grad-mix {
-    background: linear-gradient(135deg, #ff006a 0%, #6a00ff 55%, #00b7ff 100%);
+  .mono-grad-mist {
+    background: linear-gradient(135deg, #9b9da6 0%, #43454e 100%);
   }
   /* Diagonal subtle line texture on stage cards from the concept mockup */
   .concept-stripes {

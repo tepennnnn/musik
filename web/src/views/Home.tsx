@@ -26,13 +26,19 @@ import { offlineUi, useOffline } from "../stores/offline";
 import { uniqueSeeds, useStyleRecommendations } from "../stores/recommendations";
 
 const EXPLORER_VIBES = [
-  { label: "Synthwave", grad: "concept-grad-pink", query: "synthwave electronic" },
-  { label: "Indie Night", grad: "concept-grad-violet", query: "indie alternative" },
-  { label: "Lo-Fi Chill", grad: "concept-grad-cyan", query: "lofi chill beats" },
-  { label: "Acoustic", grad: "concept-grad-mix", query: "acoustic hits" },
+  { label: "Synthwave", grad: "mono-grad-platinum", query: "synthwave electronic" },
+  { label: "Indie Night", grad: "mono-grad-slate", query: "indie alternative" },
+  { label: "Lo-Fi Chill", grad: "mono-grad-obsidian", query: "lofi chill beats" },
+  { label: "Acoustic", grad: "mono-grad-mist", query: "acoustic hits" },
 ] as const;
 
-const RING_GRADS = ["concept-grad-pink", "concept-grad-cyan", "concept-grad-violet"] as const;
+const RING_GRADS = [
+  "bg-linear-to-br from-white via-zinc-400 to-zinc-700",
+  "bg-linear-to-br from-zinc-200 via-zinc-500 to-zinc-800",
+  "bg-linear-to-br from-zinc-400 via-zinc-700 to-zinc-950",
+] as const;
+
+const CARD_GRADS = ["mono-grad-platinum", "mono-grad-slate", "mono-grad-obsidian"] as const;
 
 function ExplorerCard({
   to,
@@ -55,7 +61,7 @@ function ExplorerCard({
   const t = useT();
   return (
     <div className="group relative flex w-36 shrink-0 snap-start flex-col gap-2 md:w-44">
-      <div className="relative aspect-square w-full overflow-hidden rounded-[18px] ring-1 ring-line-strong shadow-[0_14px_34px_rgb(4_3_18/0.45)] transition-transform duration-300 ease-out-expo group-hover:scale-[1.02]">
+      <div className="relative aspect-square w-full overflow-hidden rounded-[18px] ring-1 ring-line-strong shadow-[0_14px_34px_rgb(0_0_0/0.45)] transition-transform duration-300 ease-out-expo group-hover:scale-[1.02]">
         <Link to={to} aria-label={title} className="absolute inset-0 z-0">
           {art ? (
             <>
@@ -107,7 +113,7 @@ function PopularWideCard({
     <button
       type="button"
       onClick={onPlay}
-      className="group relative flex h-36 w-64 shrink-0 snap-start items-end overflow-hidden rounded-[20px] p-4 text-left ring-1 ring-line-strong shadow-[0_16px_40px_rgb(4_3_18/0.48)] transition-transform duration-300 ease-out-expo hover:scale-[1.02] active:scale-[0.98] md:h-42 md:w-80"
+      className="group relative flex h-36 w-64 shrink-0 snap-start items-end overflow-hidden rounded-[20px] p-4 text-left ring-1 ring-line-strong shadow-[0_16px_40px_rgb(0_0_0/0.48)] transition-transform duration-300 ease-out-expo hover:scale-[1.02] active:scale-[0.98] md:h-42 md:w-80"
     >
       {art ? (
         <Artwork src={art} className="absolute inset-0 size-full" />
@@ -241,7 +247,7 @@ export default function Home() {
 
       {empty && (
         <div className="glass-card mx-4 mb-8 flex flex-col items-start gap-5 rounded-[22px] p-6 md:mx-6 md:flex-row md:items-center md:p-8">
-          <span className="concept-grad-pink grid size-16 shrink-0 place-items-center rounded-[18px] text-white shadow-[0_12px_30px_rgb(255_30_108/0.4)]">
+          <span className="grid size-16 shrink-0 place-items-center rounded-[18px] bg-accent text-accent-ink shadow-[0_12px_30px_rgb(0_0_0/0.35)] ring-1 ring-line-strong">
             <LogoMark className="size-10" />
           </span>
           <div className="flex-1">
@@ -251,7 +257,7 @@ export default function Home() {
           <button
             type="button"
             onClick={() => navigate(paths.search)}
-            className="flex h-12 items-center gap-2 rounded-full bg-accent pr-6 pl-5 font-semibold text-accent-ink shadow-[0_10px_28px_rgb(255_30_108/0.35)] transition-transform active:scale-[0.97]"
+            className="flex h-12 items-center gap-2 rounded-full bg-accent pr-6 pl-5 font-semibold text-accent-ink shadow-[0_10px_28px_rgb(0_0_0/0.35)] transition-transform active:scale-[0.97]"
           >
             <MagnifyingGlassIcon size={20} weight="bold" /> {t.common.searchMusic}
           </button>
@@ -260,7 +266,7 @@ export default function Home() {
 
       {status === "ready" && (
         <div className="flex flex-col gap-9">
-          {/* Explorer carousel (square cards with vibrant gradients & play triangle from 3804655.jpg) */}
+          {/* Explorer carousel */}
           {show.homeShortcuts && (
             <Section title={t.home.explorer}>
               <div className="no-scrollbar flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 md:scroll-px-6 md:px-6">
@@ -268,7 +274,7 @@ export default function Home() {
                   to={paths.favorites}
                   title={t.nav.favorites}
                   sub={t.common.tracks(favorites.length)}
-                  gradient="concept-grad-pink"
+                  gradient="mono-grad-platinum"
                   tracks={favorites}
                   icon={<HeartIcon size={40} weight="fill" />}
                 />
@@ -277,7 +283,7 @@ export default function Home() {
                     to={paths.offline}
                     title={t.nav.downloads}
                     sub={offlineBytes > 0 ? `${t.common.tracks(offlineList.length)} · ${formatBytes(offlineBytes)}` : t.common.tracks(offlineList.length)}
-                    gradient="concept-grad-cyan"
+                    gradient="mono-grad-slate"
                     tracks={offlineList}
                     icon={<CloudArrowDownIcon size={40} weight="fill" />}
                   />
@@ -286,7 +292,7 @@ export default function Home() {
                   to={paths.history}
                   title={t.nav.recentlyPlayed}
                   sub={t.common.tracks(history.length)}
-                  gradient="concept-grad-violet"
+                  gradient="mono-grad-obsidian"
                   tracks={history}
                   icon={<ClockCounterClockwiseIcon size={40} />}
                 />
@@ -296,7 +302,7 @@ export default function Home() {
                     to={paths.playlist(p.id)}
                     title={p.name}
                     sub={t.common.tracks(p.tracks.length)}
-                    gradient={RING_GRADS[idx % RING_GRADS.length]!}
+                    gradient={CARD_GRADS[idx % CARD_GRADS.length]!}
                     art={p.tracks[0]?.art || p.tracks[0]?.thumb}
                     tracks={p.tracks}
                   />
@@ -315,7 +321,7 @@ export default function Home() {
             </Section>
           )}
 
-          {/* Popular wide cards (matching Popular wide tiles in 3804655.jpg) */}
+          {/* Popular wide cards */}
           {show.homeRecent && popularTracks.length > 0 && (
             <Section
               title={t.home.popular}
@@ -332,7 +338,7 @@ export default function Home() {
                     title={tr.title}
                     sub={tr.artist || t.common.youtube}
                     art={tr.art || tr.thumb}
-                    gradient={RING_GRADS[(i + 2) % RING_GRADS.length]!}
+                    gradient={CARD_GRADS[(i + 2) % CARD_GRADS.length]!}
                     onPlay={() => playList(popularTracks, i)}
                   />
                 ))}
@@ -340,7 +346,7 @@ export default function Home() {
             </Section>
           )}
 
-          {/* Artists circular gradient-ring avatars (matching Artist row in 3804655.jpg) */}
+          {/* Artists circular gradient-ring avatars */}
           {artists.length > 0 && (
             <Section title={t.home.artists}>
               <div className="no-scrollbar flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 md:scroll-px-6 md:px-6">
@@ -353,7 +359,7 @@ export default function Home() {
                   >
                     <span
                       className={cn(
-                        "block size-22 rounded-full p-[3px] shadow-[0_12px_28px_rgb(4_3_18/0.45)] transition-transform duration-300 ease-out-expo group-hover:scale-105 md:size-26",
+                        "block size-22 rounded-full p-[3px] shadow-[0_12px_28px_rgb(0_0_0/0.45)] transition-transform duration-300 ease-out-expo group-hover:scale-105 md:size-26",
                         RING_GRADS[i % RING_GRADS.length],
                       )}
                     >

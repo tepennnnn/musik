@@ -109,7 +109,7 @@ export default function Collection({ kind }: Props) {
             kind={kind}
             tracks={tracks}
             iconSize={64}
-            className="size-44 shrink-0 rounded-[20px] ring-1 ring-line-strong shadow-[0_24px_60px_rgb(4_3_18/0.5)] md:size-52"
+            className="size-44 shrink-0 rounded-[20px] ring-1 ring-line-strong shadow-[0_24px_60px_rgb(0_0_0/0.5)] md:size-52"
           />
           <div className="flex min-w-0 flex-col items-center gap-2 text-center md:items-start md:text-left">
             <span className="hidden text-xs font-medium text-fg-2 md:block">{label}</span>

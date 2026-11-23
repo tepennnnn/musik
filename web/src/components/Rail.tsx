@@ -108,7 +108,7 @@ export function Rail() {
     <aside className="island hidden w-[78px] shrink-0 md:flex wide:w-[256px]">
       <div className="island-core flex w-full flex-col overflow-hidden">
         <div className="flex h-16 items-center justify-center wide:justify-start wide:px-4 [@media(max-height:540px)]:h-12">
-          <span className="concept-grad-pink grid size-9 place-items-center rounded-[11px] text-white shadow-[0_6px_18px_rgb(255_30_108/0.35)] wide:hidden">
+          <span className="grid size-9 place-items-center rounded-[11px] bg-accent text-accent-ink shadow-[0_6px_18px_rgb(0_0_0/0.28)] ring-1 ring-line-strong wide:hidden">
             <LogoMark className="size-5.5" />
           </span>
           <span className="hidden wide:block">
@@ -159,19 +159,19 @@ export function Rail() {
 
         <div className="scroll-area flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
           <RailLink to={paths.favorites} label={t.nav.favorites} sub={t.common.tracks(favorites.length)}>
-            <span className="concept-grad-pink grid size-full place-items-center text-white">
+            <span className="mono-grad-platinum grid size-full place-items-center text-white ring-1 ring-inset ring-white/20">
               <HeartIcon size={20} weight="fill" />
             </span>
           </RailLink>
           {offlineUi() && (
             <RailLink to={paths.offline} label={t.nav.downloads} sub={t.common.tracks(offlineCount)}>
-              <span className="concept-grad-cyan grid size-full place-items-center text-white">
+              <span className="mono-grad-slate grid size-full place-items-center text-white ring-1 ring-inset ring-white/15">
                 <CloudArrowDownIcon size={20} weight="fill" />
               </span>
             </RailLink>
           )}
           <RailLink to={paths.history} label={t.nav.recentlyPlayed} sub={t.nav.history}>
-            <span className="concept-grad-violet grid size-full place-items-center text-white">
+            <span className="mono-grad-obsidian grid size-full place-items-center text-white ring-1 ring-inset ring-white/15">
               <ClockCounterClockwiseIcon size={20} />
             </span>
           </RailLink>

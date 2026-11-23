@@ -24,7 +24,7 @@ function Entry({ to, name, kind, tracks, sub }: { to: string; name: string; kind
           kind={kind}
           tracks={tracks}
           iconSize={28}
-          className="size-16 shrink-0 rounded-[12px] md:aspect-square md:size-auto md:w-full md:rounded-[14px] md:shadow-[0_12px_32px_rgb(4_3_18/0.35)]"
+          className="size-16 shrink-0 rounded-[12px] md:aspect-square md:size-auto md:w-full md:rounded-[14px] md:shadow-[0_12px_32px_rgb(0_0_0/0.35)]"
         />
         <span className="min-w-0">
           <span className="block truncate font-semibold">{name}</span>

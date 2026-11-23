@@ -68,7 +68,7 @@ export function MiniPlayer() {
 
   return (
     <div className="fixed inset-x-2.5 bottom-[calc(72px+env(safe-area-inset-bottom))] z-20">
-      <div className="island p-1! shadow-[0_14px_34px_rgb(4_3_18/0.55)]">
+      <div className="island p-1! shadow-[0_14px_34px_rgb(0_0_0/0.55)]">
         <div className="island-core relative flex h-14 items-center gap-3 overflow-hidden pr-1.5 pl-1.5">
           <button
             type="button"
