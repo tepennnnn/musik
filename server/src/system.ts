@@ -164,6 +164,11 @@ export function startJob(channel: Channel) {
 
     await refreshTools();
     version = await readVersion();
+    if (!version) {
+      await new Promise((r) => setTimeout(r, 500));
+      await refreshTools();
+      version = await readVersion();
+    }
     clearResolved();
     current.to = version;
     current.finishedAt = Date.now();
