@@ -19,6 +19,7 @@ import { cn } from "./lib/format";
 import { legacyRedirect, NOW_PLAYING_HASH, paths } from "./lib/routes";
 import { usePlayer } from "./player/player";
 import { useLibrary } from "./stores/library";
+import { useOffline } from "./stores/offline";
 import { openSettings, useSystem } from "./stores/system";
 import { toast, useUi } from "./stores/ui";
 import Album from "./views/Album";
@@ -41,6 +42,7 @@ export default function App() {
   const panelOpen = useUi((s) => s.panelOpen);
   const hasTrack = usePlayer((s) => s.queue.length > 0);
   const loadLibrary = useLibrary((s) => s.load);
+  const initOffline = useOffline((s) => s.init);
   const loadSystem = useSystem((s) => s.load);
   const main = useRef<HTMLElement>(null);
 
@@ -48,7 +50,8 @@ export default function App() {
 
   useEffect(() => {
     void loadLibrary();
-  }, [loadLibrary]);
+    void initOffline();
+  }, [loadLibrary, initOffline]);
 
   // Check yt-dlp shortly after start and say so once if something needs doing (not on Android: no yt-dlp there).
   useEffect(() => {
@@ -106,14 +109,15 @@ export default function App() {
   };
 
   return (
-    <div className={cn("grain flex h-dvh flex-col bg-bg md:gap-2 md:p-2", desktop && "md:pt-0")}>
+    <div className={cn("grain relative flex h-dvh flex-col bg-bg md:gap-2.5 md:p-2.5", desktop && "md:pt-0")}>
+      <div className="ambient-canvas" aria-hidden="true" />
       {desktop && <TitleBar />}
-      <div className="flex min-h-0 flex-1 md:gap-2">
+      <div className="relative z-10 flex min-h-0 flex-1 md:gap-2.5">
         <Rail />
         <main
           ref={main}
           className={cn(
-            "scroll-area relative min-w-0 flex-1 overflow-y-auto md:rounded-[20px] md:bg-surface-1 md:ring-1 md:ring-line",
+            "scroll-area relative min-w-0 flex-1 overflow-y-auto md:glass-panel md:rounded-[22px]",
             hasTrack ? "pb-[calc(152px+env(safe-area-inset-bottom))]" : "pb-[calc(88px+env(safe-area-inset-bottom))]",
             "md:pb-0",
           )}
@@ -131,6 +135,7 @@ export default function App() {
               <Route path={paths.library} element={<Library />} />
               <Route path={paths.favorites} element={<Collection kind="favorites" />} />
               <Route path={paths.history} element={<Collection kind="history" />} />
+              <Route path={paths.offline} element={<Collection kind="offline" />} />
               <Route path="/playlist/:id" element={<Collection kind="playlist" />} />
               <Route path="*" element={<Home />} />
             </Routes>

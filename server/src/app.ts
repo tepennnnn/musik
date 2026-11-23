@@ -134,6 +134,8 @@ export async function startServer(opts: StartOptions = {}): Promise<RunningServe
 
   app.get("/api/stream/:id/audio", (req, reply) => proxyStream(req, reply, videoId(req.params), "audio"));
 
+  app.get("/api/offline/:id/audio", (req, reply) => proxyStream(req, reply, videoId(req.params), "audio"));
+
   app.get("/api/stream/:id/video", async (req, reply) => {
     const id = videoId(req.params);
     const { q } = req.query as { q?: string };

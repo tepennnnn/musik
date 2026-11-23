@@ -5,6 +5,7 @@ import { createAudio } from "../lib/audio";
 import { shuffled } from "../lib/format";
 import type { Track } from "../lib/types";
 import { useLibrary } from "../stores/library";
+import { useOffline } from "../stores/offline";
 import { openSettings } from "../stores/system";
 import { toast } from "../stores/ui";
 
@@ -136,8 +137,31 @@ const needsClipLookup = (track: Track, preferVideo: boolean) =>
   preferVideo && track.kind === "song" && !clipFor.has(track.id);
 
 export const usePlayer = create<PlayerState>((set, get) => {
-  const kindFor = (track: Track): Kind =>
-    capabilities.video && get().preferVideo && (track.kind === "video" || !!clipFor.get(track.id)) ? "video" : "audio";
+  const kindFor = (track: Track): Kind => {
+    if (!navigator.onLine && useOffline.getState().entries[track.id]) return "audio";
+    return capabilities.video && get().preferVideo && (track.kind === "video" || !!clipFor.get(track.id)) ? "video" : "audio";
+  };
+
+  /** The next track in the queue that is saved offline (wrapping once), or null when none is. */
+  const nextSaved = (from: number): number | null => {
+    const queue = get().queue;
+    const savedEntries = useOffline.getState().entries;
+    for (let i = from + 1; i < queue.length; i += 1) if (queue[i]?.id && savedEntries[queue[i]!.id]) return i;
+    for (let i = 0; i < from; i += 1) if (queue[i]?.id && savedEntries[queue[i]!.id]) return i;
+    return null;
+  };
+
+  let offlineSkips = 0;
+
+  const skipToSaved = (): boolean => {
+    if (offlineSkips >= get().queue.length) return false;
+    const nextIdx = nextSaved(get().index);
+    if (nextIdx === null) return false;
+    offlineSkips += 1;
+    load(nextIdx, { autoplay: true });
+    return true;
+  };
+
   /** The YouTube id to stream: the song itself, or its music video in Video mode. */
   const mediaIdFor = (track: Track, kind: Kind) =>
     kind === "video" && track.kind !== "video" ? clipFor.get(track.id)! : track.id;
@@ -157,8 +181,22 @@ export const usePlayer = create<PlayerState>((set, get) => {
     const track = s.queue[index];
     if (!track) return;
 
-    // Video mode on a song: find its music video first, then load whichever fits.
-    if (needsClipLookup(track, s.preferVideo)) {
+    // When offline, skip tracks that aren't downloaded instead of failing on every track in the queue.
+    if (capabilities.offline && !navigator.onLine) {
+      const device = useOffline.getState();
+      if (device.ready && !device.entries[track.id]) {
+        const savedIdx = nextSaved(index);
+        if (savedIdx === null) {
+          activeMedia()?.pause();
+          set({ index, status: "error", statusText: { error: getT().offline.notDownloaded }, position: 0 });
+          return;
+        }
+        return load(savedIdx, opts);
+      }
+    }
+
+    // Video mode on a song: find its music video first, then load whichever fits (only when online).
+    if (navigator.onLine && needsClipLookup(track, s.preferVideo)) {
       const mine = ++token;
       set({
         index,
@@ -205,14 +243,17 @@ export const usePlayer = create<PlayerState>((set, get) => {
       media.src = src;
       if (autoplay) play(media);
     };
-    // The server's proxy URL is known right away; on Android the stream is first resolved on the phone.
     const source = streamSource(mediaIdFor(track, kind), kind, s.quality);
     if (typeof source === "string") start(source);
     else {
       const mine = token;
       source.then(
         (src) => mine === token && start(src),
-        (err: ApiError) => mine === token && report(err.message, err.code),
+        (err: ApiError) => {
+          if (mine !== token) return;
+          if (capabilities.offline && skipToSaved()) return;
+          report(err.message, err.code);
+        },
       );
     }
     setMetadata(track);
@@ -221,7 +262,10 @@ export const usePlayer = create<PlayerState>((set, get) => {
   async function continueWithRadio() {
     const s = get();
     const last = s.queue[s.index];
-    if (!last) return;
+    if (!last || !navigator.onLine) {
+      set({ status: "paused", statusText: null, position: 0 });
+      return;
+    }
     set({ status: "loading", statusText: "fetchingRadio" });
     try {
       const known = new Set(get().queue.map((t) => t.id));
@@ -239,14 +283,16 @@ export const usePlayer = create<PlayerState>((set, get) => {
   }
 
   function onStarted() {
+    offlineSkips = 0;
     const s = get();
     const track = s.queue[s.index];
     if (!track || recordedToken === token) return;
     recordedToken = token;
     useLibrary.getState().recordPlay(track);
+    if (!navigator.onLine) return;
     // Warm up the next track (and, in Video mode, find and resolve its clip) so it starts quickly.
     const upcoming = s.queue[s.index + 1];
-    if (!upcoming) return;
+    if (!upcoming || useOffline.getState().entries[upcoming.id]) return;
     if (s.preferVideo) void lookupClip(upcoming).then((id) => api.prepare(id ?? upcoming.id).catch(() => {}));
     else api.prepare(upcoming.id).catch(() => {});
   }
@@ -291,6 +337,7 @@ export const usePlayer = create<PlayerState>((set, get) => {
   function onError(media: HTMLMediaElement) {
     const mine = token;
     const url = media.currentSrc || media.src;
+    if (capabilities.offline && !navigator.onLine && skipToSaved()) return;
     if (capabilities.retryOnError && retriedToken !== mine) {
       const at = media.currentTime || get().position;
       load(get().index, { startAt: at, autoplay: true });

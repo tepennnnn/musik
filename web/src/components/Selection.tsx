@@ -1,13 +1,15 @@
-import { CheckIcon, HeartIcon, PlayIcon, PlaylistIcon, VideoCameraIcon } from "@phosphor-icons/react";
+import { CheckIcon, CloudArrowDownIcon, HeartIcon, PlayIcon, PlaylistIcon, VideoCameraIcon } from "@phosphor-icons/react";
 import { useState, type ReactNode } from "react";
 import { useT } from "../i18n";
 import { cn, formatTime } from "../lib/format";
 import type { Track } from "../lib/types";
 import { selectCurrent, usePlayer } from "../player/player";
 import { useLibrary } from "../stores/library";
+import { offlineUi, useOffline } from "../stores/offline";
 import { useUi } from "../stores/ui";
 import { Artwork } from "./Artwork";
 import { Equalizer } from "./Brand";
+import { OfflineTrackBadge } from "./OfflineControls";
 
 export function Check({ on }: { on: boolean }) {
   return (
@@ -46,7 +48,7 @@ function Action({
       title={label}
       className={cn(
         "flex h-9 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium whitespace-nowrap transition-transform active:scale-[0.97] disabled:opacity-40 sm:px-3.5",
-        primary ? "bg-accent text-accent-ink" : "bg-surface-3 text-fg hover:bg-surface-4",
+        primary ? "bg-accent text-accent-ink" : "glass-card text-fg",
       )}
     >
       {icon}
@@ -73,7 +75,7 @@ export function SelectedCount({ n, total }: { n: number; total: number }) {
 }
 
 /**
- * Sticky bar under the page header: select all, then play, favorite or add the selection to a playlist.
+ * Sticky bar under the page header: select all, then play, favorite, download or add the selection to a playlist.
  * With nothing selected, "Play all" plays every track.
  */
 export function SelectionBar({
@@ -94,13 +96,14 @@ export function SelectionBar({
   const playList = usePlayer((s) => s.playList);
   const addFavorites = useLibrary((s) => s.addFavorites);
   const openAddToPlaylist = useUi((s) => s.openAddToPlaylist);
+  const saveOffline = useOffline((s) => s.save);
   const toPlay = chosen.length ? chosen : all;
   const t = useT();
 
   return (
     <div
       className={cn(
-        "sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-[5] border-b border-line bg-bg/80 px-4 py-2.5 backdrop-blur-xl md:top-16 md:bg-surface-1/80 md:px-6",
+        "sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-[5] border-b border-line bg-bg/65 px-4 py-2.5 backdrop-blur-2xl md:top-16 md:bg-surface-1/65 md:px-6",
         className,
       )}
     >
@@ -125,6 +128,14 @@ export function SelectionBar({
           disabled={!toPlay.length}
           onClick={() => playList(toPlay, 0)}
         />
+        {offlineUi() && (
+          <Action
+            icon={<CloudArrowDownIcon size={16} />}
+            label={t.offline.downloadShort}
+            disabled={!chosen.length}
+            onClick={() => void saveOffline(chosen)}
+          />
+        )}
         <Action icon={<HeartIcon size={16} />} label={t.common.favorite} disabled={!chosen.length} onClick={() => void addFavorites(chosen)} />
         <Action icon={<PlaylistIcon size={16} />} label={t.common.playlist} disabled={!chosen.length} onClick={() => openAddToPlaylist(chosen)} />
       </div>
@@ -191,6 +202,7 @@ export function SelectableRow({
       <button type="button" onClick={onToggle} className={cn("min-w-0 flex-1 text-left", !selected && "opacity-60")}>
         <span className={cn("block truncate text-[15px] leading-tight font-medium", isCurrent && "text-accent-text")}>{track.title}</span>
         <span className="mt-0.5 flex items-center gap-1.5 text-[13px] text-fg-2">
+          <OfflineTrackBadge trackId={track.id} />
           {track.kind === "video" && <VideoCameraIcon size={13} className="shrink-0 text-fg-3" aria-label={t.common.video} />}
           <span className="truncate">
             {track.artist || t.common.youtube}

@@ -18,6 +18,30 @@ interface LibraryState extends Library {
   removeFromPlaylist: (id: string, trackId: string) => Promise<void>;
 }
 
+const LIB_CACHE_KEY = "musike:library-cache";
+
+function readCachedLibrary(): Library | null {
+  try {
+    const raw = localStorage.getItem(LIB_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Library;
+    if (Array.isArray(parsed.favorites) && Array.isArray(parsed.playlists) && Array.isArray(parsed.history)) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedLibrary(lib: Library) {
+  try {
+    localStorage.setItem(LIB_CACHE_KEY, JSON.stringify(lib));
+  } catch {
+    /* storage quota or private mode */
+  }
+}
+
 const replacePlaylist = (list: Playlist[], p: Playlist) => list.map((x) => (x.id === p.id ? p : x));
 
 export const useLibrary = create<LibraryState>((set, get) => ({
@@ -27,12 +51,19 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   status: "idle",
 
   load: async () => {
-    set({ status: "loading" });
+    const cached = readCachedLibrary();
+    if (cached && get().status === "idle") {
+      set({ ...cached, status: "ready" });
+    } else if (get().status === "idle") {
+      set({ status: "loading" });
+    }
     try {
       const lib = await api.library();
+      writeCachedLibrary(lib);
       set({ ...lib, status: "ready" });
     } catch {
-      set({ status: "error" });
+      if (cached) set({ ...cached, status: "ready" });
+      else set({ status: "error" });
     }
   },
 

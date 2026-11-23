@@ -6,8 +6,9 @@ import { useUi } from "../stores/ui";
 import { Artwork } from "./Artwork";
 import { FavoriteButton, ModeSwitch, Scrubber, Transport, Volume } from "./Controls";
 import { IconButton } from "./IconButton";
+import { OfflineTrackButton } from "./OfflineControls";
 
-/** Desktop and tablet player: a floating island under the content. */
+/** Desktop and tablet player: a floating glass island under the content. */
 export function PlayerBar() {
   const track = usePlayer(selectCurrent);
   const statusText = useStatusText();
@@ -19,9 +20,9 @@ export function PlayerBar() {
   const setShortcutsOpen = useUi((s) => s.setShortcutsOpen);
 
   return (
-    <div className="island shrink-0">
+    <div className="island relative z-10 shrink-0">
       <div className="island-core grid h-[84px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 px-3 lg:px-4">
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
           {track ? (
             <>
               <button
@@ -33,12 +34,13 @@ export function PlayerBar() {
                 <Artwork src={track.thumb} className="size-14 rounded-[10px]" />
               </button>
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{track.title}</p>
+                <p className="truncate text-sm font-semibold">{track.title}</p>
                 <p className={cn("truncate text-[13px]", status === "error" ? "text-danger" : "text-fg-2")}>
                   {statusText ?? track.artist}
                 </p>
               </div>
               <FavoriteButton track={track} size="sm" />
+              <OfflineTrackButton track={track} size="sm" />
             </>
           ) : (
             <p className="truncate pl-1 text-sm text-fg-3">{t.player.nothingPlaying}</p>

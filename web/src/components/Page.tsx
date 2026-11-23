@@ -1,14 +1,14 @@
-import { ArrowLeftIcon, GearSixIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon, UserCircleIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { useT } from "../i18n";
 import { cn } from "../lib/format";
 import { needsAttention, useSystem } from "../stores/system";
 import { useUi } from "../stores/ui";
-import { LogoMark } from "./Brand";
+import { Logo } from "./Brand";
 import { IconButton } from "./IconButton";
 
-/** Sticky page header. On phones it carries the brand mark and the settings entry, since there is no rail. */
+/** Sticky frosted glass page header. On phones it carries the two-tone logo and profile/settings button like the concept. */
 export function PageHeader({
   title,
   actions,
@@ -27,24 +27,23 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "safe-top sticky top-0 z-10 bg-bg/80 backdrop-blur-xl md:bg-surface-1/80",
-        // Without a title or actions the header only exists for the phone brand bar.
+        "safe-top sticky top-0 z-10 border-b border-line/60 bg-bg/60 backdrop-blur-2xl backdrop-saturate-150 md:bg-surface-1/65",
         ((!title && !actions) || mobileOnly) && "md:hidden",
         className,
       )}
     >
       <div className="flex h-14 items-center gap-3 px-4 md:h-16 md:px-6">
-        <LogoMark className="size-7 shrink-0 text-accent-text md:hidden" />
+        {!title && <Logo className="shrink-0 md:hidden" />}
         {title && <h1 className="min-w-0 flex-1 truncate text-lg font-semibold tracking-tight md:text-xl">{title}</h1>}
         {!title && <span className="flex-1" />}
         {actions}
         <IconButton
           label={attention ? t.nav.settingsUpdate : t.nav.settings}
           onClick={() => setSettingsOpen(true)}
-          className="-mr-2 md:hidden"
+          className="-mr-1.5 border border-line bg-surface-2/80 text-fg backdrop-blur-md md:hidden"
         >
-          <GearSixIcon size={22} />
-          {attention && <span className="absolute top-2 right-2 size-2 rounded-full bg-accent ring-2 ring-bg" />}
+          <UserCircleIcon size={22} weight="fill" />
+          {attention && <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-accent ring-2 ring-bg" />}
         </IconButton>
       </div>
     </header>

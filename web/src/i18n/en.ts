@@ -58,6 +58,7 @@ export const en = {
     favorites: "Favorites",
     recentlyPlayed: "Recently played",
     history: "History",
+    downloads: "Offline downloads",
   },
 
   home: {
@@ -65,6 +66,10 @@ export const en = {
     startBody: "Find any song or music video on YouTube. It plays as audio or video, with no ads.",
     seeAll: "See all",
     yourFavorites: "Your favorites",
+    searchPlaceholder: "Search songs, artists, albums…",
+    explorer: "Explorer",
+    popular: "Popular",
+    artists: "Artists",
   },
 
   library: {
@@ -79,6 +84,7 @@ export const en = {
     labelPlaylist: "Playlist",
     labelFavorites: "Collection",
     labelHistory: "History",
+    labelOffline: "Offline",
     notFoundTitle: "Playlist not found",
     notFoundBody: "It may have been deleted.",
     goToLibrary: "Go to Library",
@@ -89,6 +95,7 @@ export const en = {
     emptyFavoritesBody: "Tap the heart on any track to keep it here.",
     emptyHistoryBody: "Songs you listen to show up here.",
     emptyPlaylistBody: 'Search for songs and use "Add to playlist" in any track\'s menu.',
+    emptyOfflineBody: "Download songs, albums, or playlists to listen without an internet connection.",
     rename: "Rename",
     renameTitle: "Rename playlist",
     save: "Save",
@@ -358,6 +365,7 @@ export const en = {
     accent: "Accent color",
     customColor: "Custom color",
     colors: {
+      rose: "Rose",
       volt: "Volt",
       mint: "Mint",
       aqua: "Aqua",
@@ -428,6 +436,30 @@ export const en = {
     allAlreadyIn: (name: string) => `They were all in "${name}" already`,
     ytdlpMissing: "yt-dlp wasn't found. No song plays without it.",
     ytdlpUpdate: (version: string) => `New yt-dlp version available (${version})`,
+  },
+
+  offline: {
+    download: "Download for offline",
+    downloadShort: "Download",
+    remove: "Remove download",
+    removeAll: "Remove downloads",
+    downloaded: "Downloaded",
+    downloading: (done: number, total: number) => `Downloading ${done}/${total}`,
+    downloadingOne: "Downloading…",
+    cancel: "Cancel downloads",
+    alreadySaved: "Already downloaded for offline playback",
+    savedOne: (title: string) => `Saved "${title}" for offline playback`,
+    savedMany: (n: number) => `${n} tracks saved for offline playback`,
+    failed: (n: number) => `${n} track${n === 1 ? "" : "s"} failed to download`,
+    removed: "Removed from offline downloads",
+    removedAll: "Offline downloads removed",
+    notDownloaded: "You're offline and none of these tracks are downloaded yet.",
+    sectionTitle: "Offline downloads",
+    sectionBody: (tracks: number, size: string) =>
+      tracks ? `${count(tracks, "track", "tracks")} saved locally (${size}).` : "No tracks downloaded yet. Save any song, album, or playlist to play without internet.",
+    clearAll: "Clear all downloads",
+    confirmClear: "Remove all downloaded tracks from this device?",
+    savedCount: (n: number, total: number) => `${n} of ${total} downloaded`,
   },
 };
 

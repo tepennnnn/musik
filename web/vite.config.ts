@@ -20,6 +20,7 @@ const same = (a: string, b: string) => path.normalize(a).toLowerCase() === path.
 function nativeBackend(): Plugin {
   const swaps: [from: string, to: string][] = [
     [src("lib", "api.ts"), src("native", "api.ts")],
+    [src("lib", "offline.ts"), src("native", "offline.ts")],
     [server("config.ts"), src("native", "shims", "config.ts")],
     [server("ytdlp.ts"), src("native", "shims", "ytdlp.ts")],
   ];
@@ -59,12 +60,12 @@ export default defineConfig(({ mode }) => {
             registerType: "autoUpdate",
             includeAssets: ["favicon.svg", "apple-touch-icon.png"],
             manifest: {
-              name: "Musike",
-              short_name: "Musike",
-              description: "Your music, uninterrupted.",
+              name: "Musik",
+              short_name: "Musik",
+              description: "Your music, uninterrupted — online and offline.",
               lang: "en",
-              theme_color: "#0B0C0F",
-              background_color: "#0B0C0F",
+              theme_color: "#0b0a1a",
+              background_color: "#0b0a1a",
               display: "standalone",
               start_url: "/",
               icons: [

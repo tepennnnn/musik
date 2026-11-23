@@ -81,9 +81,16 @@ export const api: MusikeApi = {
   updateYtdlp: (channel: Channel) => request<SystemJob>("/api/system/ytdlp", { method: "POST", json: { channel } }),
 };
 
-/** What a media element plays for a track: here, the server's stream proxy. The Android backend resolves it on the phone. */
-export const streamSource = (id: string, kind: "audio" | "video", quality: "sd" | "hd"): string | Promise<string> =>
-  kind === "audio" ? `/api/stream/${id}/audio` : `/api/stream/${id}/video?q=${quality}`;
+import { offline } from "./offline";
+
+/** What a media element plays for a track: locally saved offline audio if present, otherwise the server stream proxy. */
+export async function streamSource(id: string, kind: "audio" | "video", quality: "sd" | "hd"): Promise<string> {
+  if (kind === "audio") {
+    const local = await offline.playableUrl(id);
+    if (local) return local;
+  }
+  return kind === "audio" ? `/api/stream/${id}/audio` : `/api/stream/${id}/video?q=${quality}`;
+}
 
 /** Saves a text file the way this platform does it: a browser download (the desktop app shows "Save as"). */
 export async function saveFile(name: string, text: string) {
@@ -98,12 +105,14 @@ export async function saveFile(name: string, text: string) {
 /** Only the Android app needs its own bridge to the system's media controls. */
 export const systemMedia: SystemMedia | null = null;
 
-/** What this build can do. The Android build has no video yet, no yt-dlp to manage, and retries expired streams. */
-export const capabilities = { video: true, engineSettings: true, retryOnError: false };
+/** What this build can do. Offline audio downloads work across web, desktop, and mobile. */
+export const capabilities = { video: true, engineSettings: true, retryOnError: false, offline: true };
 
 /** Media elements hide the HTTP error body; fetch it to show the real reason. */
 export async function explainStreamError(url: string): Promise<{ message: string; code?: ErrorCode }> {
   const t = getT();
+  if (url.startsWith("blob:")) return { message: t.player.browserCantPlay };
+  if (!navigator.onLine) return { message: t.player.offline };
   try {
     const res = await fetch(url, { headers: { Range: "bytes=0-0", [LANG_HEADER]: getLang() } });
     if (res.ok) return { message: t.player.browserCantPlay };

@@ -1,5 +1,7 @@
 import {
   ArrowSquareOutIcon,
+  CheckCircleIcon,
+  CloudArrowDownIcon,
   HeartIcon,
   ListPlusIcon,
   PlayIcon,
@@ -16,6 +18,7 @@ import { useT } from "../i18n";
 import { cn } from "../lib/format";
 import { usePlayer } from "../player/player";
 import { useLibrary } from "../stores/library";
+import { offlineUi, useOffline } from "../stores/offline";
 import { useUi } from "../stores/ui";
 import { Artwork } from "./Artwork";
 
@@ -42,6 +45,7 @@ export function TrackMenu() {
   const close = useUi((s) => s.closeMenu);
   const openAddToPlaylist = useUi((s) => s.openAddToPlaylist);
   const isFavorite = useLibrary((s) => (menu ? s.favorites.some((t) => t.id === menu.track.id) : false));
+  const isDownloaded = useOffline((s) => (menu ? !!s.entries[menu.track.id] : false));
   const isMd = useMediaQuery(MD);
   const box = useRef<HTMLDivElement>(null);
   const t = useT();
@@ -96,6 +100,22 @@ export function TrackMenu() {
       <Item icon={<PlaylistIcon size={18} />} onClick={() => openAddToPlaylist([menu.track])}>
         {t.trackMenu.addToPlaylist}
       </Item>
+      {offlineUi() && (
+        <Item
+          icon={
+            isDownloaded ? (
+              <CheckCircleIcon size={18} weight="fill" className="text-accent-text" />
+            ) : (
+              <CloudArrowDownIcon size={18} />
+            )
+          }
+          onClick={run(() =>
+            isDownloaded ? void useOffline.getState().remove(menu.track.id) : void useOffline.getState().save([menu.track]),
+          )}
+        >
+          {isDownloaded ? t.offline.remove : t.offline.download}
+        </Item>
+      )}
       {menu.playlistId && (
         <Item
           danger
@@ -134,7 +154,7 @@ export function TrackMenu() {
               exit={{ opacity: 0, scale: 0.97 }}
               transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
               style={pos}
-              className="absolute w-64 origin-top-left rounded-2xl border border-line-strong bg-surface-2 p-1.5 shadow-[0_16px_48px_rgb(0_0_0/0.45)]"
+              className="glass-menu absolute w-64 origin-top-left rounded-2xl p-1.5"
             >
               {content}
             </motion.div>

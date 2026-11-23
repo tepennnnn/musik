@@ -24,13 +24,13 @@ export const DEFAULT_APPEARANCE: Appearance = {
   homeFavorites: true,
 };
 
-/** Ready-made accents. "volt" is Musike's own. */
+/** Ready-made accents. "rose" matches the Musik glass concept. */
 export const ACCENTS = [
-  { id: "volt", color: DEFAULT_ACCENT },
+  { id: "rose", color: DEFAULT_ACCENT },
+  { id: "violet", color: "#7c3aed" },
+  { id: "aqua", color: "#00b7ff" },
+  { id: "volt", color: "#c3ec52" },
   { id: "mint", color: "#34d399" },
-  { id: "aqua", color: "#22d3ee" },
-  { id: "sky", color: "#60a5fa" },
-  { id: "violet", color: "#a78bfa" },
   { id: "pink", color: "#f472b6" },
   { id: "coral", color: "#fb7c5c" },
   { id: "amber", color: "#fbbf24" },

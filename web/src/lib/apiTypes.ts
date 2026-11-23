@@ -55,6 +55,14 @@ export interface Prepared {
   hasSdVideo: boolean;
 }
 
+export interface OfflineEntry {
+  id: string;
+  track: Track;
+  size: number;
+  mime: string;
+  savedAt: number;
+}
+
 /**
  * The operating system's media controls (notification, lock screen, headphone buttons) when the browser's
  * Media Session can't reach them: the Android app. Absent elsewhere.

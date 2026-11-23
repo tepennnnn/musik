@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useLocation, useParams } from "react-router";
 import { Artwork } from "../components/Artwork";
 import { IconButton, PlayDisc } from "../components/IconButton";
+import { OfflineCollectionButton, OfflineProgressBanner } from "../components/OfflineControls";
 import { BackButton, EmptyState, PageHeader } from "../components/Page";
 import { SelectableTrackList } from "../components/Selection";
 import { TrackListSkeleton } from "../components/TrackList";
@@ -15,7 +16,7 @@ import type { AlbumPage } from "../lib/types";
 import { usePlayer } from "../player/player";
 import { useLibrary } from "../stores/library";
 
-/** An album, its tracks in their original order: play it whole, shuffle it, save it or pick from it. */
+/** An album, its tracks in their original order: play it whole, shuffle it, download it, save it or pick from it. */
 export default function Album() {
   const { id = "" } = useParams();
   const location = useLocation();
@@ -57,10 +58,10 @@ export default function Album() {
               src={album.art}
               fallback={album.thumb}
               iconSize={64}
-              className="size-44 shrink-0 rounded-[18px] shadow-[0_24px_60px_rgb(0_0_0/0.4)] md:size-52"
+              className="size-44 shrink-0 rounded-[20px] ring-1 ring-line-strong shadow-[0_24px_60px_rgb(4_3_18/0.5)] md:size-52"
             />
           ) : (
-            <span className="skeleton size-44 shrink-0 rounded-[18px] md:size-52" />
+            <span className="skeleton size-44 shrink-0 rounded-[20px] md:size-52" />
           )}
           <div className="flex min-w-0 flex-col items-center gap-2 text-center md:items-start md:text-left">
             {album?.kind && <span className="text-xs font-medium text-fg-2">{album.kind}</span>}
@@ -79,35 +80,39 @@ export default function Album() {
       </div>
 
       {album && tracks.length > 0 && (
-        <div className="flex items-center gap-2 px-4 pb-4 md:px-6">
-          <PlayDisc
-            label={playing ? t.common.pause : t.album.play(album.title)}
-            px={56}
-            onClick={() => (isThisPlaying ? toggle() : playList(tracks, 0))}
-          >
-            {playing ? <PauseIcon size={24} weight="fill" /> : <PlayIcon size={24} weight="fill" />}
-          </PlayDisc>
-          <IconButton label={t.album.shuffle} size="lg" onClick={() => playList(shuffled(tracks), 0)}>
-            <ShuffleIcon size={24} />
-          </IconButton>
-          {saved ? (
-            <Link
-              to={paths.playlist(saved)}
-              className="ml-1 flex h-11 items-center gap-2 rounded-full bg-accent-soft px-4 text-sm font-medium text-accent-text"
+        <>
+          <div className="flex flex-wrap items-center gap-2 px-4 pb-4 md:px-6">
+            <PlayDisc
+              label={playing ? t.common.pause : t.album.play(album.title)}
+              px={56}
+              onClick={() => (isThisPlaying ? toggle() : playList(tracks, 0))}
             >
-              {t.album.openPlaylist} <ArrowRightIcon size={16} />
-            </Link>
-          ) : (
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => void save()}
-              className="ml-1 flex h-11 items-center gap-2 rounded-full bg-surface-3 px-4 text-sm font-medium transition-transform hover:bg-surface-4 active:scale-[0.97] disabled:opacity-60"
-            >
-              <PlaylistIcon size={18} /> {t.album.saveAsPlaylist}
-            </button>
-          )}
-        </div>
+              {playing ? <PauseIcon size={24} weight="fill" /> : <PlayIcon size={24} weight="fill" />}
+            </PlayDisc>
+            <IconButton label={t.album.shuffle} size="lg" onClick={() => playList(shuffled(tracks), 0)}>
+              <ShuffleIcon size={24} />
+            </IconButton>
+            <OfflineCollectionButton tracks={tracks} />
+            {saved ? (
+              <Link
+                to={paths.playlist(saved)}
+                className="ml-1 flex h-11 items-center gap-2 rounded-full bg-accent-soft px-4 text-sm font-medium text-accent-text"
+              >
+                {t.album.openPlaylist} <ArrowRightIcon size={16} />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => void save()}
+                className="glass-card ml-1 flex h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition-transform active:scale-[0.97] disabled:opacity-60"
+              >
+                <PlaylistIcon size={18} /> {t.album.saveAsPlaylist}
+              </button>
+            )}
+          </div>
+          <OfflineProgressBanner tracks={tracks} />
+        </>
       )}
 
       {page.status === "loading" && <TrackListSkeleton />}

@@ -53,6 +53,7 @@ export const pt: Messages = {
     favorites: "Favoritas",
     recentlyPlayed: "Tocadas recentemente",
     history: "Histórico",
+    downloads: "Downloads offline",
   },
 
   home: {
@@ -60,6 +61,10 @@ export const pt: Messages = {
     startBody: "Procure qualquer música ou clipe do YouTube. Toca como áudio ou vídeo, sem anúncios.",
     seeAll: "Ver tudo",
     yourFavorites: "Suas favoritas",
+    searchPlaceholder: "Buscar músicas, artistas, álbuns…",
+    explorer: "Explorar",
+    popular: "Populares",
+    artists: "Artistas",
   },
 
   library: {
@@ -74,6 +79,7 @@ export const pt: Messages = {
     labelPlaylist: "Playlist",
     labelFavorites: "Coleção",
     labelHistory: "Histórico",
+    labelOffline: "Offline",
     notFoundTitle: "Playlist não encontrada",
     notFoundBody: "Ela pode ter sido excluída.",
     goToLibrary: "Ir para a Biblioteca",
@@ -84,6 +90,7 @@ export const pt: Messages = {
     emptyFavoritesBody: "Toque no coração de qualquer faixa para guardá-la aqui.",
     emptyHistoryBody: "As músicas que você ouvir aparecem aqui.",
     emptyPlaylistBody: 'Busque músicas e use "Adicionar à playlist" no menu de cada faixa.',
+    emptyOfflineBody: "Baixe músicas, álbuns ou playlists para ouvir mesmo sem internet.",
     rename: "Renomear",
     renameTitle: "Renomear playlist",
     save: "Salvar",
@@ -352,6 +359,7 @@ export const pt: Messages = {
     accent: "Cor de destaque",
     customColor: "Cor personalizada",
     colors: {
+      rose: "Rosa choque",
       volt: "Volt",
       mint: "Menta",
       aqua: "Água",
@@ -422,5 +430,29 @@ export const pt: Messages = {
     allAlreadyIn: (name) => `Já estavam todas em "${name}"`,
     ytdlpMissing: "O yt-dlp não foi encontrado. Sem ele nenhuma música toca.",
     ytdlpUpdate: (version) => `Nova versão do yt-dlp disponível (${version})`,
+  },
+
+  offline: {
+    download: "Baixar para ouvir offline",
+    downloadShort: "Baixar",
+    remove: "Remover download",
+    removeAll: "Remover downloads",
+    downloaded: "Baixada",
+    downloading: (done, total) => `Baixando ${done}/${total}`,
+    downloadingOne: "Baixando…",
+    cancel: "Cancelar downloads",
+    alreadySaved: "Já está salvo para ouvir offline",
+    savedOne: (title) => `"${title}" salva para ouvir offline`,
+    savedMany: (n) => `${n} faixas salvas para ouvir offline`,
+    failed: (n) => `${n} ${n === 1 ? "faixa falhou" : "faixas falharam"} ao baixar`,
+    removed: "Removida dos downloads offline",
+    removedAll: "Downloads offline removidos",
+    notDownloaded: "Você está sem internet e nenhuma dessas faixas foi baixada.",
+    sectionTitle: "Downloads offline",
+    sectionBody: (tracks, size) =>
+      tracks ? `${count(tracks, "faixa", "faixas")} salvas neste dispositivo (${size}).` : "Nenhuma faixa baixada ainda. Salve qualquer música, álbum ou playlist para ouvir sem internet.",
+    clearAll: "Limpar todos os downloads",
+    confirmClear: "Remover todas as faixas baixadas deste dispositivo?",
+    savedCount: (n, total) => `${n} de ${total} baixadas`,
   },
 };

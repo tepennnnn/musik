@@ -1,6 +1,7 @@
 import {
   BooksIcon,
   ClockCounterClockwiseIcon,
+  CloudArrowDownIcon,
   GearSixIcon,
   HeartIcon,
   HouseIcon,
@@ -14,6 +15,7 @@ import { cn } from "../lib/format";
 import { paths } from "../lib/routes";
 import { useAppearance } from "../stores/appearance";
 import { useLibrary } from "../stores/library";
+import { offlineUi, useOffline } from "../stores/offline";
 import { needsAttention, useSystem } from "../stores/system";
 import { useUi } from "../stores/ui";
 import { Artwork } from "./Artwork";
@@ -45,7 +47,7 @@ function SettingsButton() {
       <span className="hidden flex-1 text-left wide:inline">{t.nav.settings}</span>
       {attention && (
         <>
-          <span className="absolute top-2 right-[calc(50%-14px)] size-2 rounded-full bg-accent ring-2 ring-surface-2 wide:hidden" />
+          <span className="absolute top-2 right-[calc(50%-14px)] size-2 rounded-full bg-accent ring-2 ring-surface-solid wide:hidden" />
           <span className="hidden rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent-text wide:inline">
             {updatable ? t.nav.updatePill : t.nav.checkPill}
           </span>
@@ -55,7 +57,7 @@ function SettingsButton() {
   );
 }
 
-/** Shared tile: square icon/art with an active Volt ring. Labels appear on the expanded rail (≥1280px). */
+/** Shared tile: square icon/art with an active accent ring. Labels appear on the expanded rail (≥1280px). */
 function RailLink({ to, label, sub, end, children }: { to: string; label: string; sub?: string; end?: boolean; children: ReactNode }) {
   return (
     <NavLink
@@ -66,7 +68,7 @@ function RailLink({ to, label, sub, end, children }: { to: string; label: string
         cn(
           "group flex items-center justify-center gap-3 rounded-[14px] p-1.5 transition-colors duration-200 wide:justify-start",
           "hover:bg-surface-3 wide:pr-3",
-          isActive && "wide:bg-surface-3",
+          isActive && "wide:bg-surface-3/85 wide:ring-1 wide:ring-line",
         )
       }
     >
@@ -75,7 +77,7 @@ function RailLink({ to, label, sub, end, children }: { to: string; label: string
           <span
             className={cn(
               "relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-[12px] transition-[box-shadow,transform] duration-200 ease-out-expo group-active:scale-95",
-              isActive ? "ring-2 ring-accent ring-offset-2 ring-offset-surface-2" : "",
+              isActive ? "ring-2 ring-accent ring-offset-2 ring-offset-surface-solid" : "",
             )}
           >
             {children}
@@ -98,6 +100,7 @@ export function Rail() {
   const playlists = useLibrary((s) => s.playlists);
   const favorites = useLibrary((s) => s.favorites);
   const createPlaylist = useLibrary((s) => s.createPlaylist);
+  const offlineCount = useOffline((s) => Object.keys(s.entries).length);
   const navigate = useNavigate();
   const [creating, setCreating] = useState(false);
 
@@ -105,7 +108,9 @@ export function Rail() {
     <aside className="island hidden w-[78px] shrink-0 md:flex wide:w-[256px]">
       <div className="island-core flex w-full flex-col overflow-hidden">
         <div className="flex h-16 items-center justify-center wide:justify-start wide:px-4 [@media(max-height:540px)]:h-12">
-          <LogoMark className="size-8 text-accent-text wide:hidden" />
+          <span className="concept-grad-pink grid size-9 place-items-center rounded-[11px] text-white shadow-[0_6px_18px_rgb(255_30_108/0.35)] wide:hidden">
+            <LogoMark className="size-5.5" />
+          </span>
           <span className="hidden wide:block">
             <Logo />
           </span>
@@ -120,14 +125,16 @@ export function Rail() {
               title={t.nav[key]}
               className={({ isActive }) =>
                 cn(
-                  "flex h-11 items-center justify-center gap-3 rounded-full transition-colors duration-200 wide:justify-start wide:px-4 [@media(max-height:540px)]:h-9",
-                  isActive ? "bg-surface-4 text-fg" : "text-fg-2 hover:bg-surface-3 hover:text-fg",
+                  "flex h-11 items-center justify-center gap-3 rounded-full transition-all duration-200 wide:justify-start wide:px-4 [@media(max-height:540px)]:h-9",
+                  isActive
+                    ? "bg-surface-4 text-fg ring-1 ring-line-strong shadow-[inset_0_1px_0_var(--highlight)]"
+                    : "text-fg-2 hover:bg-surface-3 hover:text-fg",
                 )
               }
             >
               {({ isActive }) => (
                 <>
-                  <Icon size={22} weight={isActive ? "fill" : "regular"} />
+                  <Icon size={22} weight={isActive ? "fill" : "regular"} className={isActive ? "text-accent-text" : ""} />
                   <span className="hidden text-sm font-medium wide:inline">{t.nav[key]}</span>
                 </>
               )}
@@ -152,12 +159,19 @@ export function Rail() {
 
         <div className="scroll-area flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
           <RailLink to={paths.favorites} label={t.nav.favorites} sub={t.common.tracks(favorites.length)}>
-            <span className="grid size-full place-items-center bg-accent-soft text-accent-text">
+            <span className="concept-grad-pink grid size-full place-items-center text-white">
               <HeartIcon size={20} weight="fill" />
             </span>
           </RailLink>
+          {offlineUi() && (
+            <RailLink to={paths.offline} label={t.nav.downloads} sub={t.common.tracks(offlineCount)}>
+              <span className="concept-grad-cyan grid size-full place-items-center text-white">
+                <CloudArrowDownIcon size={20} weight="fill" />
+              </span>
+            </RailLink>
+          )}
           <RailLink to={paths.history} label={t.nav.recentlyPlayed} sub={t.nav.history}>
-            <span className="grid size-full place-items-center bg-surface-3 text-fg-2">
+            <span className="concept-grad-violet grid size-full place-items-center text-white">
               <ClockCounterClockwiseIcon size={20} />
             </span>
           </RailLink>

@@ -1,21 +1,78 @@
 import {
   ArrowsClockwiseIcon,
   CheckCircleIcon,
+  CloudArrowDownIcon,
   DownloadSimpleIcon,
   MoonIcon,
   SunIcon,
   TranslateIcon,
+  TrashIcon,
   WarningCircleIcon,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { LANGUAGES, useI18n, useT, type Lang } from "../i18n";
 import { capabilities, type Channel } from "../lib/api";
-import { cn } from "../lib/format";
+import { cn, formatBytes } from "../lib/format";
+import { offlineUi, useOffline } from "../stores/offline";
 import { useSystem } from "../stores/system";
 import { useUi } from "../stores/ui";
 import { BackupSection } from "./BackupSection";
 import { AccentPicker, LayoutSection } from "./CustomizeSection";
 import { Modal } from "./Modal";
+
+function OfflineStorageSection() {
+  const t = useT();
+  const entries = useOffline((s) => s.entries);
+  const clear = useOffline((s) => s.clear);
+  const [confirm, setConfirm] = useState(false);
+
+  if (!offlineUi()) return null;
+
+  const list = Object.values(entries);
+  const bytes = list.reduce((sum, e) => sum + (e.size || 0), 0);
+
+  return (
+    <section className="flex flex-col gap-2.5">
+      <h3 className="flex items-center gap-1.5 text-xs font-medium text-fg-3">
+        <CloudArrowDownIcon size={14} /> {t.offline.sectionTitle}
+      </h3>
+      <div className="glass-card flex flex-col gap-3 rounded-[16px] p-4">
+        <p className="text-sm text-fg-2">{t.offline.sectionBody(list.length, formatBytes(bytes))}</p>
+        {list.length > 0 && (
+          confirm ? (
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirm(false)}
+                className="h-9 rounded-full px-4 text-xs font-medium text-fg-2 hover:text-fg"
+              >
+                {t.common.cancel}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirm(false);
+                  void clear();
+                }}
+                className="flex h-9 items-center gap-1.5 rounded-full bg-danger px-4 text-xs font-semibold text-white"
+              >
+                <TrashIcon size={14} /> {t.offline.clearAll}
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirm(true)}
+              className="flex h-10 items-center justify-center gap-2 rounded-full bg-surface-3 text-sm font-medium text-danger transition-colors hover:bg-surface-4"
+            >
+              <TrashIcon size={16} /> {t.offline.clearAll}
+            </button>
+          )
+        )}
+      </div>
+    </section>
+  );
+}
 
 function Segmented<T extends string>({
   label,
@@ -153,6 +210,8 @@ export function SettingsDialog() {
         </section>
 
         <LayoutSection />
+
+        <OfflineStorageSection />
 
         <BackupSection />
 

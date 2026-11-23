@@ -1,14 +1,16 @@
 import { DatabaseIcon, PlusIcon } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Cover, type CoverKind } from "../components/Cover";
 import { NamePlaylistDialog } from "../components/Dialogs";
+import { IconButton } from "../components/IconButton";
 import { PageHeader } from "../components/Page";
 import { useT } from "../i18n";
+import { formatBytes } from "../lib/format";
 import { paths } from "../lib/routes";
 import type { Track } from "../lib/types";
-import { IconButton } from "../components/IconButton";
 import { useLibrary } from "../stores/library";
+import { offlineUi, useOffline } from "../stores/offline";
 import { useUi } from "../stores/ui";
 
 function Entry({ to, name, kind, tracks, sub }: { to: string; name: string; kind: CoverKind; tracks: Track[]; sub: string }) {
@@ -16,16 +18,16 @@ function Entry({ to, name, kind, tracks, sub }: { to: string; name: string; kind
     <li>
       <Link
         to={to}
-        className="group flex items-center gap-3 rounded-[16px] p-2 transition-colors hover:bg-surface-2 md:flex-col md:items-stretch md:gap-3 md:p-3"
+        className="group flex items-center gap-3 rounded-[18px] p-2.5 transition-all hover:bg-surface-2 md:glass-card md:flex-col md:items-stretch md:gap-3 md:p-3"
       >
         <Cover
           kind={kind}
           tracks={tracks}
-          iconSize={26}
-          className="size-16 shrink-0 rounded-[12px] md:aspect-square md:size-auto md:w-full md:rounded-[14px] md:shadow-[0_12px_32px_rgb(0_0_0/0.3)]"
+          iconSize={28}
+          className="size-16 shrink-0 rounded-[12px] md:aspect-square md:size-auto md:w-full md:rounded-[14px] md:shadow-[0_12px_32px_rgb(4_3_18/0.35)]"
         />
         <span className="min-w-0">
-          <span className="block truncate font-medium">{name}</span>
+          <span className="block truncate font-semibold">{name}</span>
           <span className="block truncate text-sm text-fg-2">{sub}</span>
         </span>
       </Link>
@@ -35,10 +37,16 @@ function Entry({ to, name, kind, tracks, sub }: { to: string; name: string; kind
 
 export default function Library() {
   const { favorites, playlists, history, createPlaylist } = useLibrary();
+  const offlineEntries = useOffline((s) => s.entries);
   const [creating, setCreating] = useState(false);
   const setSettingsOpen = useUi((s) => s.setSettingsOpen);
   const navigate = useNavigate();
   const t = useT();
+
+  const offlineList = useMemo(() => Object.values(offlineEntries), [offlineEntries]);
+  const offlineBytes = useMemo(() => offlineList.reduce((sum, e) => sum + (e.size || 0), 0), [offlineList]);
+  const offlineSub =
+    offlineBytes > 0 ? `${t.common.tracks(offlineList.length)} · ${formatBytes(offlineBytes)}` : t.common.tracks(offlineList.length);
 
   return (
     <div className="pb-8">
@@ -46,23 +54,32 @@ export default function Library() {
         title={t.nav.library}
         actions={
           <>
-          <IconButton label={t.library.backup} onClick={() => setSettingsOpen(true)}>
-            <DatabaseIcon size={20} />
-          </IconButton>
-          <button
-            type="button"
-            onClick={() => setCreating(true)}
-            className="flex h-10 items-center gap-1.5 rounded-full bg-accent pr-4 pl-3 text-sm font-semibold text-accent-ink transition-transform active:scale-[0.97]"
-          >
-            <PlusIcon size={18} weight="bold" /> <span className="hidden sm:inline">{t.nav.newPlaylist}</span>
-            <span className="sm:hidden">{t.library.newShort}</span>
-          </button>
+            <IconButton label={t.library.backup} onClick={() => setSettingsOpen(true)}>
+              <DatabaseIcon size={20} />
+            </IconButton>
+            <button
+              type="button"
+              onClick={() => setCreating(true)}
+              className="flex h-10 items-center gap-1.5 rounded-full bg-accent pr-4 pl-3 text-sm font-semibold text-accent-ink transition-transform active:scale-[0.97]"
+            >
+              <PlusIcon size={18} weight="bold" /> <span className="hidden sm:inline">{t.nav.newPlaylist}</span>
+              <span className="sm:hidden">{t.library.newShort}</span>
+            </button>
           </>
         }
       />
 
-      <ul className="grid grid-cols-1 gap-1 px-2 pt-2 md:grid-cols-3 md:gap-2 md:px-4 lg:grid-cols-4 2xl:grid-cols-6">
+      <ul className="grid grid-cols-1 gap-1.5 px-2 pt-3 md:grid-cols-3 md:gap-3 md:px-4 lg:grid-cols-4 2xl:grid-cols-6">
         <Entry to={paths.favorites} name={t.nav.favorites} kind="favorites" tracks={favorites} sub={t.common.tracks(favorites.length)} />
+        {offlineUi() && (
+          <Entry
+            to={paths.offline}
+            name={t.nav.downloads}
+            kind="offline"
+            tracks={offlineList.map((e) => e.track)}
+            sub={offlineSub}
+          />
+        )}
         <Entry to={paths.history} name={t.nav.recentlyPlayed} kind="history" tracks={history} sub={t.common.tracks(history.length)} />
         {playlists.map((p) => (
           <Entry

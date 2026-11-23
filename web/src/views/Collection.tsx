@@ -1,28 +1,32 @@
 import { DotsThreeIcon, MagnifyingGlassIcon, PauseIcon, PencilSimpleIcon, PlayIcon, ShuffleIcon, TrashIcon } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { Cover, type CoverKind } from "../components/Cover";
 import { NamePlaylistDialog } from "../components/Dialogs";
 import { IconButton, PlayDisc } from "../components/IconButton";
 import { Modal } from "../components/Modal";
+import { OfflineCollectionButton, OfflineProgressBanner } from "../components/OfflineControls";
 import { EmptyState, PageHeader } from "../components/Page";
 import { TrackList } from "../components/TrackList";
 import { useT } from "../i18n";
-import { shuffled } from "../lib/format";
+import { formatBytes, shuffled } from "../lib/format";
 import { paths } from "../lib/routes";
 import type { Track } from "../lib/types";
 import { usePlayer } from "../player/player";
 import { useLibrary } from "../stores/library";
+import { useOffline } from "../stores/offline";
 
 interface Props {
   kind: CoverKind;
 }
 
-/** Playlist, Favorites and History share one layout. */
+/** Playlist, Favorites, Offline downloads and History share one layout. */
 export default function Collection({ kind }: Props) {
   const { id } = useParams();
   const navigate = useNavigate();
   const lib = useLibrary();
+  const offlineEntries = useOffline((s) => s.entries);
+  const clearOffline = useOffline((s) => s.clear);
   const playList = usePlayer((s) => s.playList);
   const toggle = usePlayer((s) => s.toggle);
   const queue = usePlayer((s) => s.queue);
@@ -32,11 +36,43 @@ export default function Collection({ kind }: Props) {
   const [moreOpen, setMoreOpen] = useState(false);
   const t = useT();
 
+  const offlineTracks = useMemo(
+    () =>
+      Object.values(offlineEntries)
+        .sort((a, b) => b.savedAt - a.savedAt)
+        .map((e) => e.track),
+    [offlineEntries],
+  );
+  const offlineBytes = useMemo(
+    () => Object.values(offlineEntries).reduce((sum, e) => sum + (e.size || 0), 0),
+    [offlineEntries],
+  );
+
   const playlist = kind === "playlist" ? lib.playlists.find((p) => p.id === id) : undefined;
-  const tracks: Track[] = kind === "favorites" ? lib.favorites : kind === "history" ? lib.history : playlist?.tracks ?? [];
-  const name = kind === "favorites" ? t.nav.favorites : kind === "history" ? t.nav.recentlyPlayed : playlist?.name ?? "";
+  const tracks: Track[] =
+    kind === "favorites"
+      ? lib.favorites
+      : kind === "history"
+        ? lib.history
+        : kind === "offline"
+          ? offlineTracks
+          : playlist?.tracks ?? [];
+  const name =
+    kind === "favorites"
+      ? t.nav.favorites
+      : kind === "history"
+        ? t.nav.recentlyPlayed
+        : kind === "offline"
+          ? t.nav.downloads
+          : playlist?.name ?? "";
   const label =
-    kind === "playlist" ? t.collection.labelPlaylist : kind === "favorites" ? t.collection.labelFavorites : t.collection.labelHistory;
+    kind === "playlist"
+      ? t.collection.labelPlaylist
+      : kind === "favorites"
+        ? t.collection.labelFavorites
+        : kind === "offline"
+          ? t.collection.labelOffline
+          : t.collection.labelHistory;
 
   if (kind === "playlist" && !playlist) {
     if (lib.status !== "ready") return <PageHeader />;
@@ -73,7 +109,7 @@ export default function Collection({ kind }: Props) {
             kind={kind}
             tracks={tracks}
             iconSize={64}
-            className="size-44 shrink-0 rounded-[18px] shadow-[0_24px_60px_rgb(0_0_0/0.4)] md:size-52"
+            className="size-44 shrink-0 rounded-[20px] ring-1 ring-line-strong shadow-[0_24px_60px_rgb(4_3_18/0.5)] md:size-52"
           />
           <div className="flex min-w-0 flex-col items-center gap-2 text-center md:items-start md:text-left">
             <span className="hidden text-xs font-medium text-fg-2 md:block">{label}</span>
@@ -81,12 +117,13 @@ export default function Collection({ kind }: Props) {
             <p className="font-mono text-[13px] text-fg-2">
               {t.common.tracks(tracks.length)}
               {total > 0 && <> · {t.time.total(total)}</>}
+              {kind === "offline" && offlineBytes > 0 && <> · {formatBytes(offlineBytes)}</>}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 px-4 pb-4 md:px-6">
+      <div className="flex flex-wrap items-center gap-2 px-4 pb-4 md:px-6">
         <PlayDisc
           label={playing ? t.common.pause : t.common.playX(name)}
           px={56}
@@ -106,12 +143,24 @@ export default function Collection({ kind }: Props) {
         >
           <ShuffleIcon size={24} />
         </IconButton>
+        {kind !== "offline" && <OfflineCollectionButton tracks={tracks} />}
+        {kind === "offline" && tracks.length > 0 && (
+          <button
+            type="button"
+            onClick={() => void clearOffline()}
+            className="glass-card flex h-11 items-center gap-2 rounded-full px-4 text-sm font-medium text-danger transition-transform active:scale-[0.97]"
+          >
+            <TrashIcon size={17} /> {t.offline.clearAll}
+          </button>
+        )}
         {kind === "playlist" && (
           <IconButton label={t.collection.more} size="lg" onClick={() => setMoreOpen(true)}>
             <DotsThreeIcon size={26} weight="bold" />
           </IconButton>
         )}
       </div>
+
+      <OfflineProgressBanner tracks={tracks} />
 
       <div className="px-2 md:px-3">
         {tracks.length > 0 ? (
@@ -125,7 +174,9 @@ export default function Collection({ kind }: Props) {
                 ? t.collection.emptyFavoritesBody
                 : kind === "history"
                   ? t.collection.emptyHistoryBody
-                  : t.collection.emptyPlaylistBody
+                  : kind === "offline"
+                    ? t.collection.emptyOfflineBody
+                    : t.collection.emptyPlaylistBody
             }
             action={
               <Link to={paths.search} className="mt-2 h-11 rounded-full bg-accent px-6 text-sm leading-[44px] font-semibold text-accent-ink">

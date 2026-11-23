@@ -1,6 +1,6 @@
 import { cn } from "../lib/format";
 
-/** The Musike mark: three equalizer bars forming an M. */
+/** The Musik mark: three equalizer bars forming an M. */
 export function LogoMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
@@ -13,11 +13,17 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
+/** Two-tone Musik wordmark inspired by MusicLogo in the design concept. */
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-1.5", className)}>
-      <LogoMark className="size-7 text-accent-text" />
-      <span className="text-[17px] font-semibold tracking-tight">musike</span>
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <span className="concept-grad-pink grid size-7 place-items-center rounded-[9px] text-white shadow-[0_6px_18px_rgb(255_30_108/0.38)]">
+        <LogoMark className="size-4.5" />
+      </span>
+      <span className="text-[19px] font-bold tracking-tight">
+        <span className="text-accent-text">Mus</span>
+        <span className="text-fg">ik</span>
+      </span>
     </span>
   );
 }

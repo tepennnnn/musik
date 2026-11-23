@@ -113,8 +113,14 @@ export const api: MusikeApi = {
   },
 };
 
-/** On the phone, the media element plays YouTube's stream directly: resolved here, no proxy needed. */
-export const streamSource = (id: string): Promise<string> => resolveAudio(id).then((r) => r.url);
+import { offline } from "./offline";
+
+/** On the phone, play locally saved offline audio first, otherwise resolve YouTube's stream directly. */
+export async function streamSource(id: string): Promise<string> {
+  const local = await offline.playableUrl(id);
+  if (local) return local;
+  return resolveAudio(id).then((r) => r.url);
+}
 
 export async function explainStreamError(url: string): Promise<{ message: string }> {
   forgetUrl(url);
@@ -129,4 +135,4 @@ export async function saveFile(name: string, text: string) {
 
 export const systemMedia = media;
 
-export const capabilities = { video: false, engineSettings: false, retryOnError: true };
+export const capabilities = { video: false, engineSettings: false, retryOnError: true, offline: true };
