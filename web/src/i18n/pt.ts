@@ -235,7 +235,7 @@ export const pt: Messages = {
     resultType: "Tipo de resultado",
     songs: "Músicas",
     videos: "Vídeos",
-    genres: "Gêneros",
+    genres: "Gêneros e Humores",
     list: "Buscar lista",
     youtubeLink: "Link do YouTube",
     linkError: "Não foi possível abrir esse link. Confira se o vídeo é público.",
@@ -248,6 +248,7 @@ export const pt: Messages = {
     idleBody:
       "Busque por música, artista ou álbum. Para clipes e ao vivo, use a aba Vídeos. Também dá para colar um link do YouTube.",
     exploreGenres: "Explorar por gênero",
+    exploreMoods: "Explorar por humor e estilo",
     albums: "Álbuns",
   },
 
@@ -454,5 +455,19 @@ export const pt: Messages = {
     clearAll: "Limpar todos os downloads",
     confirmClear: "Remover todas as faixas baixadas deste dispositivo?",
     savedCount: (n, total) => `${n} de ${total} baixadas`,
+  },
+
+  recommendations: {
+    forYourStyle: "Recomendado para o seu estilo",
+    forTrack: "Mesmo gênero, humor e estilo musical",
+    genreLabel: "Gênero",
+    moodLabel: "Humor",
+    styleMix: "Estilo musical parecido",
+    similarArtists: "Artistas parecidos",
+    playMix: "Tocar mix",
+    refresh: "Atualizar",
+    loading: "Combinando gênero, humor e estilo musical…",
+    empty: "Ouça ou favorite uma música para receber recomendações de gênero, humor e estilo.",
+    basedOn: (title) => `Inspirado em "${title}"`,
   },
 };

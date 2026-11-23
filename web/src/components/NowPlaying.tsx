@@ -3,6 +3,7 @@ import {
   MagnifyingGlassIcon,
   QueueIcon,
   RadioIcon,
+  SparkleIcon,
   VideoCameraSlashIcon,
   XIcon,
 } from "@phosphor-icons/react";
@@ -19,6 +20,7 @@ import { FavoriteButton, ModeSwitch, Scrubber, Transport } from "./Controls";
 import { IconButton } from "./IconButton";
 import { OfflineTrackButton } from "./OfflineControls";
 import { QueueList } from "./Queue";
+import { SimilarStylePanel } from "./Recommendations";
 import { SLOT, VideoSlot } from "./Video";
 
 /** Artwork or the live video, with a soft ambient glow and diagonal glass reflection from the concept. */
@@ -128,6 +130,7 @@ function PanelBody({ tab, slot }: { tab: PanelTab; slot: number }) {
           </div>
         </div>
       )}
+      <SimilarStylePanel track={track} />
     </div>
   );
 }
@@ -239,7 +242,7 @@ export function NowPlayingSheet({ open, onClose }: { open: boolean; onClose: () 
   const status = usePlayer((s) => s.status);
   const reduce = useReducedMotion();
   const drag = useDragControls();
-  const [view, setView] = useState<"player" | "queue">("player");
+  const [view, setView] = useState<"player" | "queue" | "style">("player");
   const t = useT();
 
   return createPortal(
@@ -278,19 +281,31 @@ export function NowPlayingSheet({ open, onClose }: { open: boolean; onClose: () 
                 <CaretDownIcon size={24} />
               </IconButton>
               <ModeSwitch className="scale-90" />
-              <IconButton
-                label={view === "queue" ? t.nowPlaying.backToPlayer : t.nowPlaying.showQueue}
-                active={view === "queue"}
-                onClick={() => setView(view === "queue" ? "player" : "queue")}
-                className="-mr-2"
-              >
-                <QueueIcon size={22} />
-              </IconButton>
+              <div className="-mr-2 flex items-center gap-0.5">
+                <IconButton
+                  label={t.recommendations.forTrack}
+                  active={view === "style"}
+                  onClick={() => setView(view === "style" ? "player" : "style")}
+                >
+                  <SparkleIcon size={20} weight={view === "style" ? "fill" : "regular"} />
+                </IconButton>
+                <IconButton
+                  label={view === "queue" ? t.nowPlaying.backToPlayer : t.nowPlaying.showQueue}
+                  active={view === "queue"}
+                  onClick={() => setView(view === "queue" ? "player" : "queue")}
+                >
+                  <QueueIcon size={22} />
+                </IconButton>
+              </div>
             </div>
 
             {view === "queue" ? (
               <div className="scroll-area -mx-3 flex-1 overflow-y-auto pb-6">
                 <QueueList />
+              </div>
+            ) : view === "style" ? (
+              <div className="scroll-area -mx-1 flex-1 overflow-y-auto pb-6">
+                <SimilarStylePanel track={track} compact />
               </div>
             ) : (
               <div className="flex flex-1 flex-col justify-evenly gap-4 pb-[calc(16px+env(safe-area-inset-bottom))]">

@@ -5,49 +5,68 @@ import { api } from "../lib/api";
 import { paths } from "../lib/routes";
 import type { Genre } from "../lib/types";
 
-/** YouTube Music's genre list as chips; each opens the genre's artists and songs. */
-export function GenrePanel({ id }: { id: string }) {
-  const lang = useI18n((s) => s.lang);
+function CategoryChips({
+  title,
+  state,
+  dotClass,
+}: {
+  title: string;
+  state: ReturnType<typeof useRemote<Genre[]>>;
+  dotClass: string;
+}) {
   const t = useT();
-  // Genre names come from YouTube Music in the app language, so each language has its own list.
-  const genres = useRemote<Genre[]>(`genres:${lang}`, () => api.genres());
-
   return (
-    <div id={id} className="rounded-[16px] bg-surface-2 p-3 ring-1 ring-line">
-      <p className="mb-2.5 px-1 text-xs font-medium text-fg-2">{t.search.exploreGenres}</p>
+    <div className="flex flex-col gap-2">
+      <p className="px-1 text-xs font-medium text-fg-2">{title}</p>
 
-      {genres.status === "loading" && (
+      {state.status === "loading" && (
         <div aria-label={t.common.loading} className="flex flex-wrap gap-2">
-          {Array.from({ length: 14 }, (_, i) => (
+          {Array.from({ length: 10 }, (_, i) => (
             <span key={i} className="skeleton h-9 rounded-full" style={{ width: `${64 + ((i * 23) % 56)}px` }} />
           ))}
         </div>
       )}
 
-      {genres.status === "error" && (
+      {state.status === "error" && (
         <p className="px-1 text-sm text-fg-2">
-          {genres.message}{" "}
-          <button type="button" onClick={genres.retry} className="font-medium text-fg underline-offset-2 hover:underline">
+          {state.message}{" "}
+          <button type="button" onClick={state.retry} className="font-medium text-fg underline-offset-2 hover:underline">
             {t.common.retry}
           </button>
         </p>
       )}
 
-      {genres.status === "ok" && (
+      {state.status === "ok" && (
         <ul className="flex flex-wrap gap-2">
-          {genres.data.map((g) => (
+          {state.data.map((g) => (
             <li key={g.id}>
               <Link
                 to={paths.genre(g.id)}
                 state={{ name: g.name }}
-                className="block h-9 rounded-full bg-surface-3 px-4 text-sm leading-9 transition-colors hover:bg-surface-4"
+                className="glass-card inline-flex h-9 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors"
               >
-                {g.name}
+                <span className={`size-2 rounded-full ${dotClass}`} />
+                <span>{g.name}</span>
               </Link>
             </li>
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+/** YouTube Music's mood styles and genres as glass chips; each opens artists and songs in that style. */
+export function GenrePanel({ id }: { id: string }) {
+  const lang = useI18n((s) => s.lang);
+  const t = useT();
+  const moods = useRemote<Genre[]>(`moods:${lang}`, () => api.moods());
+  const genres = useRemote<Genre[]>(`genres:${lang}`, () => api.genres());
+
+  return (
+    <div id={id} className="glass-card flex flex-col gap-4 rounded-[18px] p-3.5">
+      <CategoryChips title={t.search.exploreMoods} state={moods} dotClass="concept-grad-pink" />
+      <CategoryChips title={t.search.exploreGenres} state={genres} dotClass="concept-grad-cyan" />
     </div>
   );
 }

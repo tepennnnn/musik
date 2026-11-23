@@ -23,6 +23,26 @@ export interface Library {
   history: Track[];
 }
 
+export interface MoodOrGenre {
+  id: string;
+  name: string;
+  kind: "genre" | "mood";
+}
+
+export interface SimilarArtist {
+  id: string;
+  name: string;
+  thumb: string;
+  art: string;
+}
+
+export interface StyleRecommendations {
+  genres: MoodOrGenre[];
+  moods: MoodOrGenre[];
+  tracks: Track[];
+  artists: SimilarArtist[];
+}
+
 import { tr, type Text } from "./i18n.js";
 
 export const VIDEO_ID = /^[A-Za-z0-9_-]{11}$/;

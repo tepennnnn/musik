@@ -28,6 +28,26 @@ export interface Genre {
   name: string;
 }
 
+export interface MoodOrGenre {
+  id: string;
+  name: string;
+  kind: "genre" | "mood";
+}
+
+export interface SimilarArtist {
+  id: string;
+  name: string;
+  thumb: string;
+  art: string;
+}
+
+export interface StyleRecommendations {
+  genres: MoodOrGenre[];
+  moods: MoodOrGenre[];
+  tracks: Track[];
+  artists: SimilarArtist[];
+}
+
 export interface GenreArtist {
   id: string;
   name: string;

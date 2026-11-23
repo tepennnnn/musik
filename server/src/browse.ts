@@ -1,7 +1,7 @@
 import type { Innertube } from "youtubei.js";
 import { isLang, msg, type Lang } from "./i18n.js";
-import { sized, text, toTrack, withClient } from "./search.js";
-import type { Track } from "./types.js";
+import { radio, sized, text, toTrack, withClient } from "./search.js";
+import type { MoodOrGenre, SimilarArtist, StyleRecommendations, Track } from "./types.js";
 import { HttpError, VIDEO_ID } from "./types.js";
 
 export interface Genre {
@@ -138,20 +138,37 @@ function parseKey(key: string): { lang: Lang; id: string } {
   return { lang: isLang(lang) ? lang : "en", id: rest.join("|") };
 }
 
-const genreList = cached(6 * 60 * MINUTE, async (key): Promise<Genre[]> => {
+const parseCategories = (grid: any, kind: "genre" | "mood"): MoodOrGenre[] =>
+  itemsOf(grid)
+    .map((b) => ({
+      id: String(b.endpoint?.payload?.params ?? ""),
+      name: text(b.button_text ?? b.title),
+      kind,
+    }))
+    .filter((g) => GENRE_ID.test(g.id) && g.name);
+
+const moodsAndGenresCatalog = cached(6 * 60 * MINUTE, async (key): Promise<{ genres: MoodOrGenre[]; moods: MoodOrGenre[] }> => {
   const { lang } = parseKey(key);
   const page = await withClient((yt) => browse(yt, { browseId: "FEmusic_moods_and_genres" }), lang).catch(() => {
     throw new HttpError(502, msg("genresUnavailable"));
   });
   const grids = shelvesOf(page);
-  // The page has "moods" then "genres"; match the title in any language, falling back to the last grid.
-  const grid = grids.find((g) => /g[eéê]ne?r/i.test(text(g.header?.title ?? g.title))) ?? grids.at(-1);
-  return itemsOf(grid)
-    .map((b) => ({ id: String(b.endpoint?.payload?.params ?? ""), name: text(b.button_text ?? b.title) }))
-    .filter((g) => GENRE_ID.test(g.id) && g.name);
+  const genreGrid = grids.find((g) => /g[eéê]ne?r/i.test(text(g.header?.title ?? g.title))) ?? grids.at(-1);
+  const moodGrid =
+    grids.find((g) => g !== genreGrid && /mood|moment|humor|clima|atividades|feel/i.test(text(g.header?.title ?? g.title))) ??
+    grids.find((g) => g !== genreGrid);
+
+  return {
+    genres: parseCategories(genreGrid, "genre"),
+    moods: moodGrid ? parseCategories(moodGrid, "mood") : [],
+  };
 });
 
-export const genres = (lang: Lang) => genreList(keyOf(lang));
+export const genres = async (lang: Lang): Promise<Genre[]> =>
+  (await moodsAndGenresCatalog(keyOf(lang))).genres.map(({ id, name }) => ({ id, name }));
+
+export const moods = async (lang: Lang): Promise<Genre[]> =>
+  (await moodsAndGenresCatalog(keyOf(lang))).moods.map(({ id, name }) => ({ id, name }));
 
 async function playlistItems(id: string, limit: number, lang: Lang): Promise<any[]> {
   try {
@@ -208,12 +225,13 @@ interface GenreState {
  */
 const genreState = cached(30 * MINUTE, async (key): Promise<GenreState> => {
   const { lang, id } = parseKey(key);
-  const [all, page] = await Promise.all([
-    genres(lang).catch(() => [] as Genre[]),
+  const [catalog, page] = await Promise.all([
+    moodsAndGenresCatalog(keyOf(lang)).catch(() => ({ genres: [] as MoodOrGenre[], moods: [] as MoodOrGenre[] })),
     withClient((yt) => browse(yt, { browseId: "FEmusic_moods_and_genres_category", params: id }), lang).catch(() => {
       throw new HttpError(502, msg("genreUnavailable"));
     }),
   ]);
+  const all = [...catalog.genres, ...catalog.moods];
   const shelves = shelvesOf(page);
   const items = shelves.flatMap(itemsOf);
   const songs = items.filter((i) => i.item_type === "song");
@@ -398,4 +416,159 @@ export const album = (id: string, lang: Lang) => albumPage(keyOf(lang, id));
 export async function searchAlbums(query: string, lang: Lang): Promise<AlbumCard[]> {
   const result: any = await withClient((yt) => yt.music.search(query, { type: "album" }), lang);
   return albumCards(itemsOf(result.contents?.[0]));
+}
+
+interface RelatedBundle {
+  tracks: Track[];
+  artists: SimilarArtist[];
+  cues: string[];
+}
+
+const relatedFor = cached(30 * MINUTE, async (key): Promise<RelatedBundle> => {
+  const { lang, id } = parseKey(key);
+  const [upNext, relPage] = await Promise.all([
+    radio(id).catch(() => [] as Track[]),
+    withClient((yt) => yt.music.getRelated(id), lang).catch(() => null),
+  ]);
+
+  const relTracks: Track[] = [];
+  const artists: SimilarArtist[] = [];
+  const cues: string[] = [];
+  const seenArtists = new Set<string>();
+
+  const sections: any[] = Array.isArray((relPage as any)?.contents) ? (relPage as any).contents : [];
+  for (const section of sections) {
+    const heading = text(section?.header?.title ?? section?.title);
+    if (heading) cues.push(heading);
+    for (const item of itemsOf(section)) {
+      const itemTitle = text(item?.title ?? item?.name);
+      const itemSub = text(item?.subtitle);
+      if (itemTitle) cues.push(itemTitle);
+      if (itemSub) cues.push(itemSub);
+
+      const browseId = String(item?.endpoint?.payload?.browseId ?? item?.id ?? "");
+      if (ARTIST_ID.test(browseId) && !seenArtists.has(browseId) && itemTitle) {
+        seenArtists.add(browseId);
+        artists.push({ id: browseId, name: itemTitle, ...imagesOf(item) });
+        continue;
+      }
+
+      const track = toTrack(item, "song");
+      if (track && track.id !== id) relTracks.push(track);
+    }
+  }
+
+  return {
+    tracks: uniqueTracks([...relTracks, ...upNext]).filter((t) => t.id !== id),
+    artists,
+    cues,
+  };
+});
+
+/** Maps style keywords (from titles, artists, related playlists) to YouTube Music genre & mood names. */
+const STYLE_HINTS: [RegExp, string[]][] = [
+  [/\b(synth|electronic|edm|house|techno|trance|dubstep|electro|club|dj|remix|dance)\b/i, ["electronic", "dance", "eletrônica", "energy", "energia", "party", "festa"]],
+  [/\b(lofi|lo-fi|chill|ambient|downtempo|study|sleep|rain|calm|relax|soft|acoustic)\b/i, ["chill", "focus", "foco", "relax", "dormir", "sleep", "acoustic", "acústico"]],
+  [/\b(rock|metal|punk|grunge|guitar|hardcore|alt-?rock|classic rock)\b/i, ["rock", "metal", "indie", "alternative", "alternativo", "energy", "energia"]],
+  [/\b(indie|alternative|shoegaze|dream pop|bedroom pop)\b/i, ["indie", "alternative", "alternativo", "feel good", "chill", "astral"]],
+  [/\b(hip[\s-]?hop|rap|trap|drill|boom bap|beats)\b/i, ["hip-hop", "hip hop", "rap", "workout", "treino", "energy", "energia"]],
+  [/\b(r&b|rnb|soul|neo[\s-]?soul|funk|groove)\b/i, ["r&b", "soul", "romance", "chill", "feel good"]],
+  [/\b(jazz|bossa|blues|sax|swing)\b/i, ["jazz", "blues", "chill", "focus", "foco", "dinner"]],
+  [/\b(pop|hits|dance pop|teen pop)\b/i, ["pop", "feel good", "party", "festa", "commute"]],
+  [/\b(classical|piano|orchestra|symphony|violin|cello|instrumental)\b/i, ["classical", "clássica", "focus", "foco", "sleep"]],
+  [/\b(latin|reggaeton|salsa|bachata|sertanejo|mpb|samba|pagode|forro|forró)\b/i, ["latin", "latina", "mpb", "sertanejo", "party", "festa", "feel good"]],
+  [/\b(country|folk|americana|bluegrass)\b/i, ["country", "folk", "acoustic", "feel good", "commute"]],
+  [/\b(sad|melanchol|heartbreak|cry|lonely|blue)\b/i, ["sad", "triste", "romance", "chill"]],
+  [/\b(workout|gym|run|cardio|pump|hype|beast)\b/i, ["workout", "treino", "energy", "energia", "pump"]],
+];
+
+function scoreCategories(list: MoodOrGenre[], corpus: string, seedHash: number): MoodOrGenre[] {
+  const lower = corpus.toLowerCase();
+  const scored = list.map((cat, idx) => {
+    let score = 0;
+    const catLower = cat.name.toLowerCase();
+    // Direct word match against catalog name
+    for (const word of catLower.split(/[^a-zà-ÿ0-9]+/).filter((w) => w.length >= 3)) {
+      if (lower.includes(word)) score += 6;
+    }
+    // Style taxonomy match
+    for (const [pattern, targets] of STYLE_HINTS) {
+      if (pattern.test(lower) && targets.some((t) => catLower.includes(t))) {
+        score += 4;
+      }
+    }
+    // Deterministic tie-breaker so different songs pick fresh, varied genres/moods instead of always index 0.
+    const tie = ((seedHash * 31 + idx * 17) % 97) / 100;
+    return { cat, score: score + tie };
+  });
+  return scored.sort((a, b) => b.score - a.score).map((s) => s.cat);
+}
+
+/**
+ * Recommends tracks, artists, genres and mood styles matching the given seed tracks
+ * (same genre, mood style, and music style).
+ */
+export async function recommendations(seeds: Track[], lang: Lang): Promise<StyleRecommendations> {
+  const cleanSeeds = seeds.filter((s) => s && VIDEO_ID.test(s.id)).slice(0, 4);
+  const catalog = await moodsAndGenresCatalog(keyOf(lang)).catch(() => ({
+    genres: [] as MoodOrGenre[],
+    moods: [] as MoodOrGenre[],
+  }));
+
+  if (!cleanSeeds.length) {
+    const pickGenres = catalog.genres.slice(0, 6);
+    const pickMoods = catalog.moods.slice(0, 6);
+    const starterIds = [pickMoods[0]?.id, pickGenres[0]?.id].filter((x): x is string => !!x);
+    const pages = await Promise.all(starterIds.map((id) => genre(id, lang).catch(() => null)));
+    const tracks = uniqueTracks(roundRobin(pages.filter((p): p is GenrePage => !!p).map((p) => p.tracks))).slice(0, 24);
+    return { genres: pickGenres, moods: pickMoods, tracks, artists: [] };
+  }
+
+  const seedIds = new Set(cleanSeeds.map((s) => s.id));
+  const relatedResults = await Promise.all(cleanSeeds.slice(0, 3).map((s) => relatedFor(keyOf(lang, s.id)).catch(() => null)));
+
+  const cues: string[] = [];
+  const relatedTracksList: Track[][] = [];
+  const allArtists: SimilarArtist[] = [];
+  const seenArtists = new Set<string>();
+
+  for (const s of cleanSeeds) {
+    cues.push(s.title, s.artist, s.album ?? "");
+  }
+  for (const rel of relatedResults) {
+    if (!rel) continue;
+    cues.push(...rel.cues);
+    relatedTracksList.push(rel.tracks);
+    for (const tr of rel.tracks.slice(0, 8)) cues.push(tr.title, tr.artist);
+    for (const a of rel.artists) {
+      if (!seenArtists.has(a.id)) {
+        seenArtists.add(a.id);
+        allArtists.push(a);
+      }
+    }
+  }
+
+  const corpus = cues.filter(Boolean).join(" ");
+  const seedHash = [...cleanSeeds[0]!.id].reduce((acc, ch) => acc * 33 + ch.charCodeAt(0), 7) >>> 0;
+
+  const matchedGenres = scoreCategories(catalog.genres, corpus, seedHash).slice(0, 6);
+  const matchedMoods = scoreCategories(catalog.moods, corpus, seedHash + 13).slice(0, 6);
+
+  // Pull tracks from the top matched Genre and top matched Mood to widen same-genre & same-mood variety.
+  const catTargets = [matchedGenres[0]?.id, matchedMoods[0]?.id].filter((x): x is string => !!x);
+  const catPages = await Promise.all(catTargets.map((id) => genre(id, lang).catch(() => null)));
+  const catTrackLists = catPages
+    .filter((p): p is GenrePage => !!p)
+    .map((p) => p.tracks.slice(0, 14));
+
+  const blended = uniqueTracks(roundRobin([...relatedTracksList, ...catTrackLists]))
+    .filter((t) => !seedIds.has(t.id))
+    .slice(0, 30);
+
+  return {
+    genres: matchedGenres,
+    moods: matchedMoods,
+    tracks: blended,
+    artists: allArtists.slice(0, 12),
+  };
 }

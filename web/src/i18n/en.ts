@@ -241,7 +241,7 @@ export const en = {
     resultType: "Result type",
     songs: "Songs",
     videos: "Videos",
-    genres: "Genres",
+    genres: "Genres & Moods",
     list: "Search a list",
     youtubeLink: "YouTube link",
     linkError: "Couldn't open this link. Check that the video is public.",
@@ -254,6 +254,7 @@ export const en = {
     idleBody:
       "Search for a song, artist or album. For music videos and live performances, use the Videos tab. You can also paste a YouTube link.",
     exploreGenres: "Browse by genre",
+    exploreMoods: "Browse by mood style",
     albums: "Albums",
   },
 
@@ -460,6 +461,20 @@ export const en = {
     clearAll: "Clear all downloads",
     confirmClear: "Remove all downloaded tracks from this device?",
     savedCount: (n: number, total: number) => `${n} of ${total} downloaded`,
+  },
+
+  recommendations: {
+    forYourStyle: "Recommended for your style",
+    forTrack: "Same genre, mood & music style",
+    genreLabel: "Genre",
+    moodLabel: "Mood",
+    styleMix: "Similar music style",
+    similarArtists: "Similar artists",
+    playMix: "Play mix",
+    refresh: "Refresh",
+    loading: "Matching your genre, mood and music style…",
+    empty: "Play or favorite a song to get genre, mood and style recommendations.",
+    basedOn: (title: string) => `Inspired by "${title}"`,
   },
 };
 

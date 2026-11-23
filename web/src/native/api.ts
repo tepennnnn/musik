@@ -9,6 +9,8 @@ import {
   genre as genrePage,
   genreArtists,
   genres,
+  moods,
+  recommendations,
   searchAlbums,
 } from "../../../server/src/browse";
 import { msg, tr, type MsgKey } from "../../../server/src/i18n";
@@ -64,6 +66,8 @@ export const api: MusikeApi = {
   suggest: (q, signal) => call(() => suggestions(q.trim().slice(0, 100), getLang()).catch(() => []), signal),
   radio: (id) => call(() => radio(id)),
   genres: () => call(() => genres(getLang())),
+  moods: () => call(() => moods(getLang())),
+  recommendations: (seeds, signal) => call(() => recommendations(seeds.map(library.sanitizeTrack), getLang()), signal),
   genre: (id, signal) =>
     call(async () => {
       if (!GENRE_ID.test(id)) throw fail(400, "invalidGenre");

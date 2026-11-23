@@ -1,9 +1,11 @@
 import {
+  ArrowsClockwiseIcon,
   ClockCounterClockwiseIcon,
   CloudArrowDownIcon,
   HeartIcon,
   MagnifyingGlassIcon,
   PlayIcon,
+  SparkleIcon,
   UserIcon,
 } from "@phosphor-icons/react";
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
@@ -11,15 +13,17 @@ import { Link, useNavigate } from "react-router";
 import { Artwork } from "../components/Artwork";
 import { LogoMark } from "../components/Brand";
 import { PageHeader, Section } from "../components/Page";
+import { StyleChip } from "../components/Recommendations";
 import { TrackList, TrackListSkeleton } from "../components/TrackList";
 import { useT } from "../i18n";
 import { cn, formatBytes } from "../lib/format";
 import { paths } from "../lib/routes";
 import type { Track } from "../lib/types";
-import { usePlayer } from "../player/player";
+import { selectCurrent, usePlayer } from "../player/player";
 import { useAppearance } from "../stores/appearance";
 import { useLibrary } from "../stores/library";
 import { offlineUi, useOffline } from "../stores/offline";
+import { uniqueSeeds, useStyleRecommendations } from "../stores/recommendations";
 
 const EXPLORER_VIBES = [
   { label: "Synthwave", grad: "concept-grad-pink", query: "synthwave electronic" },
@@ -132,6 +136,7 @@ function PopularWideCard({
 
 export default function Home() {
   const { favorites, playlists, history, status } = useLibrary();
+  const current = usePlayer(selectCurrent);
   const offlineEntries = useOffline((s) => s.entries);
   const playList = usePlayer((s) => s.playList);
   const navigate = useNavigate();
@@ -151,16 +156,25 @@ export default function Home() {
     [offlineEntries],
   );
 
+  const recSeeds = useMemo(
+    () => uniqueSeeds([current, favorites[0], history[0], favorites[1], history[1], offlineList[0]]),
+    [current, favorites, history, offlineList],
+  );
+  const recs = useStyleRecommendations(recSeeds, { allowEmpty: true, persist: true });
+
   const artists = useMemo(() => {
-    const map = new Map<string, { name: string; thumb?: string }>();
+    const map = new Map<string, { name: string; thumb?: string; id?: string }>();
+    for (const a of recs.data?.artists ?? []) {
+      if (!map.has(a.name)) map.set(a.name, { name: a.name, thumb: a.thumb, id: a.id });
+    }
     for (const tr of [...favorites, ...history, ...offlineList]) {
       const name = tr.artist?.trim();
       if (!name || name === t.common.youtube) continue;
       if (!map.has(name)) map.set(name, { name, thumb: tr.thumb });
       if (map.size >= 12) break;
     }
-    return [...map.values()];
-  }, [favorites, history, offlineList, t.common.youtube]);
+    return [...map.values()].slice(0, 12);
+  }, [recs.data?.artists, favorites, history, offlineList, t.common.youtube]);
 
   const popularTracks = useMemo(() => {
     const seen = new Set<string>();
@@ -332,8 +346,9 @@ export default function Home() {
               <div className="no-scrollbar flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 md:scroll-px-6 md:px-6">
                 {artists.map((a, i) => (
                   <Link
-                    key={a.name}
-                    to={`${paths.search}?q=${encodeURIComponent(a.name)}`}
+                    key={a.id ?? a.name}
+                    to={a.id ? paths.artist(a.id) : `${paths.search}?q=${encodeURIComponent(a.name)}`}
+                    state={a.id ? { name: a.name } : undefined}
                     className="group flex w-24 shrink-0 snap-start flex-col items-center gap-2 text-center md:w-28"
                   >
                     <span
@@ -355,6 +370,67 @@ export default function Home() {
                     <span className="w-full truncate text-xs font-medium text-fg-2 group-hover:text-fg">{a.name}</span>
                   </Link>
                 ))}
+              </div>
+            </Section>
+          )}
+
+          {/* Same Genre, Mood Style & Music Style recommendations */}
+          {(recs.status === "loading" || (recs.data && (recs.data.tracks.length > 0 || recs.data.moods.length > 0 || recs.data.genres.length > 0))) && (
+            <Section
+              title={t.recommendations.forYourStyle}
+              action={
+                <div className="flex items-center gap-2">
+                  {recs.data && recs.data.tracks.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => playList(recs.data!.tracks, 0)}
+                      className="flex h-8 items-center gap-1.5 rounded-full bg-accent px-3.5 text-xs font-semibold text-accent-ink transition-transform active:scale-95"
+                    >
+                      <PlayIcon size={13} weight="fill" /> {t.recommendations.playMix}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={recs.refresh}
+                    aria-label={t.recommendations.refresh}
+                    title={t.recommendations.refresh}
+                    className="glass-card grid size-8 place-items-center rounded-full text-fg-2 hover:text-fg"
+                  >
+                    <ArrowsClockwiseIcon size={15} className={recs.status === "loading" ? "animate-spin" : ""} />
+                  </button>
+                </div>
+              }
+            >
+              <div className="flex flex-col gap-4">
+                {recSeeds[0] && (
+                  <p className="flex items-center gap-1.5 px-4 text-xs text-fg-2 md:px-6">
+                    <SparkleIcon size={14} weight="fill" className="shrink-0 text-accent-text" />
+                    <span className="truncate">{t.recommendations.basedOn(recSeeds[0].title)}</span>
+                  </p>
+                )}
+
+                {recs.data && (recs.data.moods.length > 0 || recs.data.genres.length > 0) && (
+                  <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 md:flex-wrap md:px-6">
+                    {recs.data.moods.map((m) => (
+                      <StyleChip key={`m-${m.id}`} item={m} />
+                    ))}
+                    {recs.data.genres.map((g) => (
+                      <StyleChip key={`g-${g.id}`} item={g} />
+                    ))}
+                  </div>
+                )}
+
+                {recs.status === "loading" && !recs.data && (
+                  <div className="px-2 md:px-3">
+                    <TrackListSkeleton rows={5} />
+                  </div>
+                )}
+
+                {recs.data && recs.data.tracks.length > 0 && (
+                  <div className="px-2 md:px-3">
+                    <TrackList tracks={recs.data.tracks.slice(0, 10)} context={recs.data.tracks} header={false} showAlbum />
+                  </div>
+                )}
               </div>
             </Section>
           )}

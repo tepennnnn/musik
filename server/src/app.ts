@@ -2,7 +2,19 @@ import { existsSync } from "node:fs";
 import { createServer } from "node:net";
 import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
-import { ALBUM_ID, album, ARTIST_ID, artist, GENRE_ID, genre, genreArtists, genres, searchAlbums } from "./browse.js";
+import {
+  ALBUM_ID,
+  album,
+  ARTIST_ID,
+  artist,
+  GENRE_ID,
+  genre,
+  genreArtists,
+  genres,
+  moods,
+  recommendations,
+  searchAlbums,
+} from "./browse.js";
 import { config } from "./config.js";
 import * as library from "./library.js";
 import { fileStorage } from "./libraryFile.js";
@@ -83,6 +95,14 @@ export async function startServer(opts: StartOptions = {}): Promise<RunningServe
   // Browse by genre: genre → its artists or all its songs → an artist's top songs
 
   app.get("/api/genres", async (req) => ({ genres: await genres(langOf(req)) }));
+
+  app.get("/api/moods", async (req) => ({ moods: await moods(langOf(req)) }));
+
+  app.post("/api/recommendations", async (req) => {
+    const body = (req.body ?? {}) as { seeds?: unknown };
+    const seeds = Array.isArray(body.seeds) ? body.seeds.slice(0, 6).map(library.sanitizeTrack) : [];
+    return recommendations(seeds, langOf(req));
+  });
 
   app.get("/api/genres/:gid", async (req) => {
     const { gid } = req.params as { gid: string };
