@@ -1,24 +1,60 @@
-# Builds every download for a release tag (v1.4.0) and attaches them to a draft GitHub release:
-# the Windows installer, the macOS apps (Apple Silicon and Intel), the Linux packages, the Android APK and the
-# unsigned iOS app.
-# The draft only goes public when it's published by hand, after checking it.
+# Builds every download for a release tag (e.g. v1.6.0) or manual workflow_dispatch run and attaches them
+# to a GitHub release: Windows installer, macOS apps (Apple Silicon and Intel), Linux packages, Android APK,
+# unsigned iOS IPA, and the Web PWA bundle.
 #
-# The APK is signed with the key in these repository secrets (Settings → Secrets and variables → Actions):
-#   MUSIKE_KEYSTORE_BASE64    the .jks file, base64-encoded
+# Optional repository secrets for persistent Android APK update signatures (Settings -> Secrets and variables -> Actions):
+#   MUSIKE_KEYSTORE_BASE64    base64-encoded .jks keystore
 #   MUSIKE_KEYSTORE_PASSWORD  MUSIKE_KEY_ALIAS  MUSIKE_KEY_PASSWORD
-# Always the same key: Android only installs an update signed like the version already on the phone.
+# When omitted, an ad-hoc keystore is generated so the built APK is still signed and installable.
 name: Release
 
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to create/publish (e.g. v1.6.0). Leave empty for a build-only dry run."
+        required: false
+        default: ""
+        type: string
+      draft:
+        description: "Create the GitHub release as a draft"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
 
 jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm build
+      - name: Package Web PWA bundle
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          mkdir -p release
+          (cd web/dist && zip -qry "../../release/Musike-Web-${version}.zip" .)
+          { echo "### Web PWA"; ls release | sed 's/^/- /'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: web
+          path: release/*
+          if-no-files-found: error
+
   windows:
+    needs: verify
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
@@ -42,6 +78,7 @@ jobs:
           if-no-files-found: error
 
   mac:
+    needs: verify
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v5
@@ -68,6 +105,7 @@ jobs:
           if-no-files-found: error
 
   linux:
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -92,6 +130,7 @@ jobs:
           if-no-files-found: error
 
   android:
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -106,26 +145,44 @@ jobs:
           java-version: 21
       - run: pnpm install --frozen-lockfile
       - name: Signing key
+        shell: bash
         env:
           KEYSTORE_BASE64: ${{ secrets.MUSIKE_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.MUSIKE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.MUSIKE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.MUSIKE_KEY_PASSWORD }}
         run: |
-          if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "::warning::MUSIKE_KEYSTORE_BASE64 is not set: the APK will be unsigned and won't install."
-            exit 0
+          keystore="$RUNNER_TEMP/musike-release.jks"
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$keystore"
+            {
+              echo "MUSIKE_KEYSTORE=$keystore"
+              echo "MUSIKE_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+              echo "MUSIKE_KEY_ALIAS=$KEY_ALIAS"
+              echo "MUSIKE_KEY_PASSWORD=$KEY_PASSWORD"
+            } >> "$GITHUB_ENV"
+          else
+            echo "::warning::MUSIKE_KEYSTORE_BASE64 is not set: generating an ad-hoc release keystore. Future updates will require uninstalling unless you configure a persistent keystore secret."
+            keytool -genkeypair -v \
+              -keystore "$keystore" \
+              -alias musike \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass musike -keypass musike \
+              -dname "CN=Musik, OU=Release, O=Musik, L=Unknown, S=Unknown, C=US"
+            {
+              echo "MUSIKE_KEYSTORE=$keystore"
+              echo "MUSIKE_KEYSTORE_PASSWORD=musike"
+              echo "MUSIKE_KEY_ALIAS=musike"
+              echo "MUSIKE_KEY_PASSWORD=musike"
+            } >> "$GITHUB_ENV"
           fi
-          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/musike-release.jks"
-          echo "MUSIKE_KEYSTORE=$RUNNER_TEMP/musike-release.jks" >> "$GITHUB_ENV"
       - run: pnpm --filter @musike/mobile apk
-        env:
-          MUSIKE_KEYSTORE_PASSWORD: ${{ secrets.MUSIKE_KEYSTORE_PASSWORD }}
-          MUSIKE_KEY_ALIAS: ${{ secrets.MUSIKE_KEY_ALIAS }}
-          MUSIKE_KEY_PASSWORD: ${{ secrets.MUSIKE_KEY_PASSWORD }}
       - name: Check downloads
         shell: bash
         run: |
           { echo "### Android"; ls release | sed 's/^/- /'; } >> "$GITHUB_STEP_SUMMARY"
-          found=$(ls release/*-Android.apk 2>/dev/null | wc -l)
-          [ "$found" -eq 1 ] || { echo "::error::Expected 1 file(s) matching *-Android.apk, found $found"; ls -l release; exit 1; }
+          found=$(ls release/*-Android*.apk 2>/dev/null | wc -l)
+          [ "$found" -eq 1 ] || { echo "::error::Expected 1 file(s) matching *-Android*.apk, found $found"; ls -l release; exit 1; }
       - uses: actions/upload-artifact@v7
         with:
           name: android
@@ -133,6 +190,7 @@ jobs:
           if-no-files-found: error
 
   ios:
+    needs: verify
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v5
@@ -157,8 +215,8 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: [windows, mac, linux, android, ios]
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [verify, windows, mac, linux, android, ios]
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -167,9 +225,19 @@ jobs:
         with:
           path: downloads
           merge-multiple: true
+      - name: Resolve release tag
+        id: tag
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            echo "name=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
       - uses: softprops/action-gh-release@v3
         with:
-          draft: true
+          tag_name: ${{ steps.tag.outputs.name }}
+          draft: ${{ inputs.draft == true }}
           generate_release_notes: true
           files: downloads/*
           fail_on_unmatched_files: true
